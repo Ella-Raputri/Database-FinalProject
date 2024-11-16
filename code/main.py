@@ -1,6 +1,7 @@
 import tkinter as tk
 from login import LoginPage
 from register import RegisterPage
+from Admin.admin_dashboard import AdminDashboard
 
 class App(tk.Tk):
     def __init__(self):
@@ -9,11 +10,23 @@ class App(tk.Tk):
         self.title('Clinic Box Appointment System')
 
         self.center_window()
-        self.font_color1 = '#5182B8'
+        self.font_color1 = '#5182B8' #blue
+        self.font_color2 = '#4E4E4E' #black
+        self.font_color3 = '#818181' #grey
+        self.separator_color = '#B7B7B7'
+
+        self.green_font = '#2FA514'
         self.bg_color1 = '#358FEE'
+
+        # login and register
         self.login_page = LoginPage(self)
         self.register_page = RegisterPage(self)
-        self.show_frame(self.login_page)
+
+        # admin
+        self.admin_bg = '#F5F5F5'
+        self.admin_dashboard = AdminDashboard(self)
+
+        self.show_frame(self.admin_dashboard)
     
 
     def center_window(self):
