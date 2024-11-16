@@ -2,6 +2,9 @@ import tkinter as tk
 from login import LoginPage
 from register import RegisterPage
 from Admin.admin_dashboard import AdminDashboard
+from Admin.admin_doctors import AdminDoctorPage
+from Admin.admin_patient import AdminPatientPage
+from Admin.admin_booking import AdminBookingPage
 
 class App(tk.Tk):
     def __init__(self):
@@ -16,6 +19,8 @@ class App(tk.Tk):
         self.separator_color = '#B7B7B7'
 
         self.green_font = '#2FA514'
+        self.yellow_font = '#A38500'
+        self.red_font = '#8F0101'
         self.bg_color1 = '#358FEE'
 
         # login and register
@@ -25,8 +30,11 @@ class App(tk.Tk):
         # admin
         self.admin_bg = '#F5F5F5'
         self.admin_dashboard = AdminDashboard(self)
+        self.admin_doctor_page = AdminDoctorPage(self)
+        self.admin_patient_page = AdminPatientPage(self)
+        self.admin_booking_page = AdminBookingPage(self)
 
-        self.show_frame(self.admin_dashboard)
+        self.show_frame(self.admin_booking_page)
     
 
     def center_window(self):

@@ -1,90 +1,42 @@
 import tkinter as tk
+from tkinter import ttk
 
-# Function to handle mouse wheel scrolling
-def on_mouse_wheel(event, canvas):
-    if event.delta > 0:  # Scroll up
-        canvas.yview_scroll(-1, "units")
-    else:  # Scroll down
-        canvas.yview_scroll(1, "units")
-
-# Create main window
+# Create the main application window
 root = tk.Tk()
-root.title("Scrollable Panes with Mousewheel")
+root.title("Scrollable Table")
+root.geometry("800x400")
 
-# Create a frame for the first scrollable pane
-frame1 = tk.Frame(root)
-frame1.pack(side=tk.LEFT, padx=10)
+# Create a frame to hold the table and scrollbars
+table_frame = tk.Frame(root)
+table_frame.pack(fill=tk.BOTH, expand=True)
 
-# Add canvas and scrollbar for the first pane
-canvas1 = tk.Canvas(frame1, width=200, height=300)
-scrollbar1 = tk.Scrollbar(frame1, orient="vertical", command=canvas1.yview)
-canvas1.config(yscrollcommand=scrollbar1.set)
-scrollbar1.pack(side="right", fill="y")
-canvas1.pack(side="left", fill="both", expand=True)
+# Create a Treeview widget
+columns = [f"Column {i+1}" for i in range(8)]  # Example with 8 columns
+table = ttk.Treeview(table_frame, columns=columns, show="headings", height=10)
 
-# Add content to the first canvas
-content1 = tk.Frame(canvas1)
-canvas1.create_window((0, 0), window=content1, anchor="nw")
+# Define headings and column widths
+for col in columns:
+    table.heading(col, text=col)
+    table.column(col, width=100, anchor=tk.CENTER)
 
-for i in range(20):
-    tk.Label(content1, text=f"Pane 1 - Item {i+1}").pack()
+# Add example data to the table
+for i in range(50):  # Example with 50 rows
+    row = [f"Row {i+1} Col {j+1}" for j in range(8)]
+    table.insert("", tk.END, values=row)
 
-# Update scrollregion for the first canvas
-content1.update_idletasks()
-canvas1.config(scrollregion=canvas1.bbox("all"))
+# Create vertical scrollbar
+v_scroll = ttk.Scrollbar(table_frame, orient=tk.VERTICAL, command=table.yview)
+v_scroll.pack(side=tk.RIGHT, fill=tk.Y)
 
-# Bind mouse wheel event to the first canvas
-canvas1.bind("<MouseWheel>", lambda event, canvas=canvas1: on_mouse_wheel(event, canvas))
+# Create horizontal scrollbar
+h_scroll = ttk.Scrollbar(table_frame, orient=tk.HORIZONTAL, command=table.xview)
+h_scroll.pack(side=tk.BOTTOM, fill=tk.X)
 
-# Create a frame for the second scrollable pane
-frame2 = tk.Frame(root)
-frame2.pack(side=tk.LEFT, padx=10)
+# Attach scrollbars to the table
+table.configure(yscrollcommand=v_scroll.set, xscrollcommand=h_scroll.set)
 
-# Add canvas and scrollbar for the second pane
-canvas2 = tk.Canvas(frame2, width=200, height=300)
-scrollbar2 = tk.Scrollbar(frame2, orient="vertical", command=canvas2.yview)
-canvas2.config(yscrollcommand=scrollbar2.set)
-scrollbar2.pack(side="right", fill="y")
-canvas2.pack(side="left", fill="both", expand=True)
+# Pack the table into the frame
+table.pack(fill=tk.BOTH, expand=True)
 
-# Add content to the second canvas
-content2 = tk.Frame(canvas2)
-canvas2.create_window((0, 0), window=content2, anchor="nw")
-
-for i in range(20):
-    tk.Label(content2, text=f"Pane 2 - Item {i+1}").pack()
-
-# Update scrollregion for the second canvas
-content2.update_idletasks()
-canvas2.config(scrollregion=canvas2.bbox("all"))
-
-# Bind mouse wheel event to the second canvas
-canvas2.bind("<MouseWheel>", lambda event, canvas=canvas2: on_mouse_wheel(event, canvas))
-
-# Create a frame for the third scrollable pane
-frame3 = tk.Frame(root)
-frame3.pack(side=tk.LEFT, padx=10)
-
-# Add canvas and scrollbar for the third pane
-canvas3 = tk.Canvas(frame3, width=200, height=300)
-scrollbar3 = tk.Scrollbar(frame3, orient="vertical", command=canvas3.yview)
-canvas3.config(yscrollcommand=scrollbar3.set)
-scrollbar3.pack(side="right", fill="y")
-canvas3.pack(side="left", fill="both", expand=True)
-
-# Add content to the third canvas
-content3 = tk.Frame(canvas3)
-canvas3.create_window((0, 0), window=content3, anchor="nw")
-
-for i in range(20):
-    tk.Label(content3, text=f"Pane 3 - Item {i+1}").pack()
-
-# Update scrollregion for the third canvas
-content3.update_idletasks()
-canvas3.config(scrollregion=canvas3.bbox("all"))
-
-# Bind mouse wheel event to the third canvas
-canvas3.bind("<MouseWheel>", lambda event, canvas=canvas3: on_mouse_wheel(event, canvas))
-
-# Run the Tkinter event loop
+# Run the application
 root.mainloop()
