@@ -34,7 +34,7 @@ class App(tk.Tk):
         self.admin_patient_page = AdminPatientPage(self)
         self.admin_booking_page = AdminBookingPage(self)
 
-        self.show_frame(self.admin_booking_page)
+        self.show_frame(self.admin_patient_page)
     
 
     def center_window(self):
@@ -49,11 +49,11 @@ class App(tk.Tk):
     def show_frame(self, frame):
         for widget in self.winfo_children():  
             widget.pack_forget()
-        frame.pack(fill='both', expand=True)
+        frame.pack(fill='both', expand=True)        
         # frame.pack(pady=30)
-
 
 
 if __name__ == "__main__":
     app = App()
+    app.resizable(False,False)
     app.mainloop()

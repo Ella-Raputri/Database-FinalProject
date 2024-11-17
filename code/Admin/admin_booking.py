@@ -44,7 +44,7 @@ class AdminBookingPage(tk.Frame):
         background_label.place(x=0, y=0, relwidth=1, relheight=1)
 
         self.create_navbar()
-
+ 
         # title
         title_label = tk.Label(self, text="Bookings", font=("Poppins", 38, "bold"), fg='black', bg=self.master.admin_bg)
         title_label.place(x=248, y=20)

@@ -94,7 +94,7 @@ class AdminDoctorPage(tk.Frame):
 
         
         spview_more_btn = tk.Button(self.specialty_panel, text='View Details', bg=self.master.bg_color1,
-                                     fg='white', font=('Poppins', 12), bd=0)
+                                     fg='white', font=('Poppins', 12), bd=0, command=self.open_specialties)
         spview_more_btn.place(x=30, y=161, width=110, height=32)
 
 
@@ -120,7 +120,7 @@ class AdminDoctorPage(tk.Frame):
 
         
         scview_more_btn = tk.Button(self.schedule_panel, text='View Details', bg=self.master.bg_color1,
-                                     fg='white', font=('Poppins', 12), bd=0)
+                                     fg='white', font=('Poppins', 12), command=self.open_schedule,bd=0)
         scview_more_btn.place(x=30, y=120, width=110, height=32)
 
         # add btn
@@ -177,6 +177,156 @@ class AdminDoctorPage(tk.Frame):
         table.configure(yscrollcommand=v_scroll.set, xscrollcommand=h_scroll.set)
         table.pack(fill=tk.BOTH, expand=True)
 
+
+    def open_specialties(self):
+        child_window = tk.Toplevel(self)
+        child_window.configure(bg="white")
+        child_window.title("Specialty")
+        child_window.geometry("533x676")  
+
+        # specialty label
+        sptitle_label = tk.Label(child_window, text="Specialties",font=("Poppins Semibold", 32), 
+                                 fg='black', bg='white')
+        sptitle_label.place(x=142, y=18)
+
+        # scrollpane specialties
+        frame1 = tk.Frame(child_window, bd=1, highlightthickness=1)
+        frame1.place(x=26, y=100)
+
+        canvas1 = tk.Canvas(frame1, width=470, height=486, bg='white')
+        scrollbar1 = tk.Scrollbar(frame1, orient="vertical", command=canvas1.yview, bg='white')
+        canvas1.config(yscrollcommand=scrollbar1.set)
+        scrollbar1.pack(side="right", fill="y")
+        canvas1.pack(side="left", fill="both", expand=True)
+
+        content1 = tk.Frame(canvas1, bg='white')
+        canvas1.create_window((0, 0), window=content1, anchor="nw")
+
+        self.delete_photo = tk.PhotoImage(file='images/delete_icon.png')
+        self.edit_photo = tk.PhotoImage(file='images/edit_icon.png')
+
+        for i in range(20):
+            # row container 
+            row_frame = tk.Frame(content1, bg='white')
+            row_frame.pack(fill='x', pady=(0, 10))
+
+            # name label
+            name_label = tk.Label(row_frame, text=f"Cardiology {i+1}", font=("Poppins Medium", 16), 
+                                fg=self.master.font_color2, bg='white', anchor="w")
+            name_label.grid(row=0, column=0, padx=(0, 10), sticky="w")
+
+            # edit button
+            edit_button = tk.Button(row_frame, image=self.edit_photo, 
+                                   command=lambda i=i: print(f'edit sp {i+1}'))
+            edit_button.grid(row=0, column=1, padx=(10, 5), sticky="e")
+
+            # delete button            
+            delete_button = tk.Button(row_frame, image=self.delete_photo, 
+                                    command=lambda i=i: print(f'delete sp {i+1}'))
+            delete_button.grid(row=0, column=2, padx=(5, 0), sticky="e")
+
+            # desc label
+            desc_label = tk.Label(row_frame, text="This is a wrapped label. The text will wrap if it exceeds the specified width.",
+                                font=("Poppins", 12), fg=self.master.font_color2, bg='white', 
+                                wraplength=450, justify="left", anchor="w")
+            desc_label.grid(row=1, column=0, columnspan=3, sticky="w")
+    
+
+        content1.update_idletasks()
+        canvas1.config(scrollregion=canvas1.bbox("all"))
+        canvas1.bind("<MouseWheel>", lambda event, canvas=canvas1: self.on_mouse_wheel(event, canvas))
+
+        # add btn
+        self.add_photo = tk.PhotoImage(file='images/add_icon.png')
+        add_button = tk.Button(child_window, image=self.add_photo, 
+                                command=lambda: print(f'add sp'))
+        add_button.place(x=475, y=100)
+
+        # ok btn
+        ok_button = tk.Button(child_window, text="OK", font=("Poppins Semibold", 18), bg=self.master.bg_color1, 
+                                fg="white", command=child_window.destroy)
+        ok_button.place(x=211, y=615, width=116, height=40)
+
+        child_window.resizable(False, False)
+
+
+    def open_schedule(self):
+        child_window = tk.Toplevel(self)
+        child_window.configure(bg="white")
+        child_window.title("Schedule")
+        child_window.geometry("533x676")  
+
+        # schedule label
+        sctitle_label = tk.Label(child_window, text="Dr Doctor Schedule",font=("Poppins Semibold", 28), 
+                                 fg='black', bg='white')
+        sctitle_label.place(x=90, y=18)
+
+        # scrollpane schedule
+        frame1 = tk.Frame(child_window, bd=1, highlightthickness=1)
+        frame1.place(x=26, y=100)
+
+        canvas1 = tk.Canvas(frame1, width=470, height=486, bg='white')
+        scrollbar1 = tk.Scrollbar(frame1, orient="vertical", command=canvas1.yview, bg='white')
+        canvas1.config(yscrollcommand=scrollbar1.set)
+        scrollbar1.pack(side="right", fill="y")
+        canvas1.pack(side="left", fill="both", expand=True)
+
+        content1 = tk.Frame(canvas1, bg='white')
+        canvas1.create_window((0, 0), window=content1, anchor="nw")
+
+        self.delete_photo = tk.PhotoImage(file='images/delete_icon.png')
+        self.edit_photo = tk.PhotoImage(file='images/edit_icon.png')
+
+        for i in range(20):
+            # row container 
+            row_frame = tk.Frame(content1, bg='white')
+            row_frame.pack(fill='x', pady=(0, 10))
+
+            # name label
+            name_label = tk.Label(row_frame, text=f"Day {i+1}", font=("Poppins Medium", 16), 
+                                fg=self.master.font_color2, bg='white', anchor="w")
+            name_label.grid(row=0, column=0, padx=(5, 10), sticky="w")
+
+            # edit button
+            edit_button = tk.Button(row_frame, image=self.edit_photo, 
+                                   command=lambda i=i: print(f'edit sc {i+1}'))
+            edit_button.grid(row=0, column=1, padx=(0, 5), sticky="e")
+
+            # delete button            
+            delete_button = tk.Button(row_frame, image=self.delete_photo, 
+                                    command=lambda i=i: print(f'delete sc {i+1}'))
+            delete_button.grid(row=0, column=2, padx=(0, 5), sticky="e")
+
+            # desc label
+            desc_label = tk.Label(row_frame, text="This is a wrapped label. The text will wrap if it exceeds the specified width.",
+                                font=("Poppins", 12), fg=self.master.font_color2, bg='white', 
+                                wraplength=450, justify="left", anchor="w")
+            desc_label.grid(row=1, column=0, columnspan=3, sticky="w",padx=(5, 10), pady=(0, 10))
+    
+
+        content1.update_idletasks()
+        canvas1.config(scrollregion=canvas1.bbox("all"))
+        canvas1.bind("<MouseWheel>", lambda event, canvas=canvas1: self.on_mouse_wheel(event, canvas))
+
+        # add btn
+        self.add_photo = tk.PhotoImage(file='images/add_icon.png')
+        add_button = tk.Button(child_window, image=self.add_photo, 
+                                command=lambda: print(f'add sc'))
+        add_button.place(x=475, y=100)
+
+        # ok btn
+        ok_button = tk.Button(child_window, text="OK", font=("Poppins Semibold", 18), bg=self.master.bg_color1, 
+                                fg="white", command=child_window.destroy)
+        ok_button.place(x=206, y=615, width=116, height=40)
+
+        child_window.resizable(False, False)
+
+
+    def on_mouse_wheel(self, event, canvas):
+        if event.delta > 0:  # Scroll up
+            canvas.yview_scroll(-1, "units")
+        else:  # Scroll down
+            canvas.yview_scroll(1, "units")
 
     
     
