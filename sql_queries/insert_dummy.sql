@@ -1,6 +1,5 @@
 USE ClinicSystemDB;
 
--- Define number of records
 SET @total_branches = 5;
 SET @users_per_branch = 205;
 SET @total_specialties = 20;
@@ -32,7 +31,7 @@ CALL InsertDummyBranches();
 
 select * from ClinicBranch;
 
--- Insert 20 specialties with SpecialtyId format SP{number}
+-- Insert 20 specialties 
 DELIMITER $$
 CREATE PROCEDURE InsertDummySpecialties()
 BEGIN
@@ -60,38 +59,38 @@ BEGIN
     WHILE branch_id <= @total_branches DO
         -- Insert patients
         WHILE patient_id <= branch_id * @patients_per_branch DO
-            INSERT INTO `User` (UserId, Email, `Password`, FirstName, LastName, PhoneNumber, RoleName, City, AddressDetail)
+            INSERT INTO `User` (UserId, Email, `Password`, FirstName, LastName, Gender, PhoneNumber, RoleName, City, AddressDetail)
             VALUES (CONCAT('PAT', LPAD(patient_id, 7, '0')), CONCAT('user', patient_id, '@example.com'), 'password', 
-                    CONCAT('FirstName', patient_id), CONCAT('LastName', patient_id), 
+                    CONCAT('FirstName', patient_id), CONCAT('LastName', patient_id), CASE WHEN RAND() < 0.5 THEN 1 ELSE 0 END,
                     CONCAT('081234567', patient_id), 'Patient', CONCAT('City', branch_id), 
                     CONCAT('Branch ', branch_id, ' Address'));
                     
 			INSERT INTO Patient (PatientId, DateOfBirth, ProfilePicture)
             VALUES (CONCAT('PAT', LPAD(patient_id, 7, '0')), 
-                    DATE_ADD('1980-01-01', INTERVAL FLOOR(RAND() * 14610) DAY),  -- randomize dob
+                    DATE_ADD('1980-01-01', INTERVAL FLOOR(RAND() * 14610) DAY),  
                     NULL);
             SET patient_id = patient_id + 1;
         END WHILE;
 
         -- Insert doctors
         WHILE doctor_id <= branch_id * @doctors_per_branch DO
-            INSERT INTO `User` (UserId, Email, `Password`, FirstName, LastName, PhoneNumber, RoleName, City, AddressDetail)
+            INSERT INTO `User` (UserId, Email, `Password`, FirstName, LastName, Gender, PhoneNumber, RoleName, City, AddressDetail)
             VALUES (CONCAT('DOC', LPAD(doctor_id, 7, '0')), CONCAT('user', doctor_id, '@example.com'), 'password', 
-                    CONCAT('FirstName', doctor_id), CONCAT('LastName', doctor_id), 
+                    CONCAT('FirstName', doctor_id), CONCAT('LastName', doctor_id), CASE WHEN RAND() < 0.5 THEN 1 ELSE 0 END,
                     CONCAT('081234567', doctor_id), 'Doctor', CONCAT('City', branch_id), 
                     CONCAT('Branch ', branch_id, ' Address'));
             INSERT INTO Doctor (DoctorId, SpecialtyID, ProfilePicture, `Description`, BranchNo)
             VALUES (CONCAT('DOC', LPAD(doctor_id, 7, '0')), 
-                    CONCAT('SP', LPAD(FLOOR(1 + RAND() * 20), 7, '0')),  -- Ensure valid SpecialtyId
+                    CONCAT('SP', LPAD(FLOOR(1 + RAND() * 20), 7, '0')),  
                     NULL, CONCAT('Doctor description ', doctor_id), branch_id);
             SET doctor_id = doctor_id + 1;
         END WHILE;
 
         -- Insert admins
         WHILE admin_id <= branch_id * @admins_per_branch DO
-            INSERT INTO `User` (UserId, Email, `Password`, FirstName, LastName, PhoneNumber, RoleName, City, AddressDetail)
+            INSERT INTO `User` (UserId, Email, `Password`, FirstName, LastName, Gender, PhoneNumber, RoleName, City, AddressDetail)
             VALUES (CONCAT('ADM', LPAD(admin_id, 7, '0')), CONCAT('user', admin_id, '@example.com'), 'password', 
-                    CONCAT('FirstName', admin_id), CONCAT('LastName', admin_id), 
+                    CONCAT('FirstName', admin_id), CONCAT('LastName', admin_id), CASE WHEN RAND() < 0.5 THEN 1 ELSE 0 END,
                     CONCAT('081234567', admin_id), 'Admin', CONCAT('City', branch_id), 
                     CONCAT('Branch ', branch_id, ' Address'));
             INSERT INTO `Admin` (AdminId, BranchNo)
@@ -120,22 +119,19 @@ BEGIN
     DECLARE disease_name VARCHAR(255);
     
     WHILE patient_id <= @total_branches * @patients_per_branch DO
-        SET history_count = FLOOR(1 + RAND() * 5); -- 1 to 5 histories per patient
+        SET history_count = FLOOR(1 + RAND() * 5); 
         WHILE history_count > 0 DO
-            -- Generate a unique disease name
             SET disease_name = CONCAT('Disease ', FLOOR(1 + RAND() * 100));
             
-            -- Check if the disease already exists for this patient, and regenerate if necessary
             WHILE EXISTS (SELECT 1 FROM MedicalHistory WHERE PatientId = CONCAT('PAT', LPAD(patient_id, 7, '0')) AND DiseaseName = disease_name) DO
                 SET disease_name = CONCAT('Disease ', FLOOR(1 + RAND() * 100));
             END WHILE;
             
-            -- Insert the medical history record
             INSERT INTO MedicalHistory (PatientId, DiseaseName, `Status`)
             VALUES (
-                CONCAT('PAT', LPAD(patient_id, 7, '0')), -- Ensure PatientId format
+                CONCAT('PAT', LPAD(patient_id, 7, '0')), 
                 disease_name,
-                RAND() < 0.5 -- Randomize status
+                RAND() < 0.5 
             );
             
             SET history_count = history_count - 1;
@@ -157,18 +153,15 @@ BEGIN
     DECLARE start_hour INT;
     DECLARE end_hour INT;
     DECLARE day_of_week VARCHAR(10);
-    DECLARE schedule_id INT DEFAULT 1; -- Start schedule id from 1
+    DECLARE schedule_id INT DEFAULT 1; 
     
     WHILE i <= @total_branches * @doctors_per_branch DO
-        SET schedule_count = FLOOR(1 + RAND() * 5); -- 1 to 5 schedules per doctor
+        SET schedule_count = FLOOR(1 + RAND() * 5); 
         
         WHILE schedule_count > 0 DO
-            -- Generate random start hour between 9 and 21
-            SET start_hour = FLOOR(9 + RAND() * 12); -- Random hour between 9 and 21
-            -- Ensure end hour is later than start hour
-            SET end_hour = start_hour + FLOOR(1 + RAND() * 4); -- Random end hour, between start and 21
+            SET start_hour = FLOOR(9 + RAND() * 12); 
+            SET end_hour = start_hour + FLOOR(1 + RAND() * 4); 
 
-            -- Random day of the week (Monday to Sunday)
             SET day_of_week = CASE 
                                 WHEN RAND() < 0.14 THEN 'Monday'
                                 WHEN RAND() < 0.28 THEN 'Tuesday'
@@ -179,17 +172,15 @@ BEGIN
                                 ELSE 'Sunday'
                               END;
 
-            -- Insert doctor schedule with unique schedule_id
             INSERT INTO DoctorSchedule (ScheduleId, DoctorId, DayOfWeek, StartHour, EndHour)
             VALUES (
-                CONCAT('SCH', LPAD(schedule_id, 7, '0')),  -- ScheduleId format SCH0000001
-                CONCAT('DOC', LPAD(i, 7, '0')),  -- DoctorId format DOC{num}
-                day_of_week,  -- Randomized day of the week
-                CONCAT(LPAD(start_hour, 2, '0'), ':00:00'),  -- Start hour in HH:00:00 format
-                CONCAT(LPAD(end_hour, 2, '0'), ':00:00')  -- End hour in HH:00:00 format
+                CONCAT('SCH', LPAD(schedule_id, 7, '0')),  
+                CONCAT('DOC', LPAD(i, 7, '0')),  
+                day_of_week,  
+                CONCAT(LPAD(start_hour, 2, '0'), ':00:00'),  
+                CONCAT(LPAD(end_hour, 2, '0'), ':00:00')  
             );
 
-            -- Increment schedule_id for the next schedule
             SET schedule_id = schedule_id + 1;
             SET schedule_count = schedule_count - 1;
         END WHILE;
@@ -200,21 +191,21 @@ END$$
 DELIMITER ;
 CALL InsertDummyDoctorSchedules();
 
--- truncate table doctorschedule; 
 select * from doctorschedule;
 
 
--- Insert 1000 Bookings (Random Patient and Doctor Combination)
+-- Insert 1000 Bookings 
 DELIMITER $$
 CREATE PROCEDURE InsertDummyBookings()
 BEGIN
     DECLARE i INT DEFAULT 1;
     WHILE i <= @total_bookings DO
-        INSERT INTO Booking (BookingId, PatientId, DoctorId, AppointmentDate, AppointmentStatus, CheckUpType, ReasonOfVisit)
+        INSERT INTO Booking (BookingId, PatientId, DoctorId, AppointmentDate, AppointmentHour, AppointmentStatus, CheckUpType, ReasonOfVisit)
         VALUES (CONCAT('BOK', LPAD(i, 7, '0')), 
                 CONCAT('PAT', LPAD(FLOOR(1 + RAND() * (@total_branches * @patients_per_branch)), 7, '0')), 
                 CONCAT('DOC', LPAD(FLOOR(1 + RAND() * (@total_branches * @doctors_per_branch)), 7, '0')),
                 DATE_ADD('2024-01-01', INTERVAL FLOOR(RAND() * 365) DAY),
+                SEC_TO_TIME(FLOOR(RAND() * 86400)),
                 CASE WHEN RAND() < 0.5 THEN 'Completed' ELSE 'Pending' END,
                 CONCAT('Type ', FLOOR(1 + RAND() * 5)), 
                 CONCAT('Visit Reason ', i));

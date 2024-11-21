@@ -16,6 +16,7 @@ CREATE TABLE `User`(
     `Password` 			VARCHAR(100)		NOT NULL,
     FirstName			VARCHAR(100)		NOT NULL,
     LastName			VARCHAR(200)		NOT NULL,
+    Gender				BIT					NOT NULL,
     PhoneNumber			VARCHAR(50)   		NOT NULL,
     RoleName			VARCHAR(50)			NOT NULL,
     City				VARCHAR(50)			NOT NULL,
@@ -81,6 +82,7 @@ CREATE TABLE Booking (
     PatientId        	VARCHAR(10)		NOT NULL, 
     DoctorId        	VARCHAR(10)		NOT NULL,
     AppointmentDate		DATE			NOT NULL,
+    AppointmentHour		TIME			NOT NULL,
     AppointmentStatus	VARCHAR(20)		NOT NULL,
     CheckUpType			VARCHAR(200)	NOT NULL,
     ReasonOfVisit		TEXT			NOT NULL,    
@@ -90,4 +92,5 @@ CREATE TABLE Booking (
 );
 
 
-Select * from booking
+Select * from booking;
+Select * from user
