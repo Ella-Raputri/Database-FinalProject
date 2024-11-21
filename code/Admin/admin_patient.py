@@ -1,5 +1,6 @@
 import tkinter as tk
 from tkinter import ttk
+from connection import connect_to_db
 
 class AdminPatientPage(tk.Frame):
     def __init__(self, parent):
@@ -38,6 +39,7 @@ class AdminPatientPage(tk.Frame):
 
 
     def create_widgets(self):
+        connect_to_db()
         # background
         self.background_photo = tk.PhotoImage(file='images/admin_default.png')  
         background_label = tk.Label(self, image=self.background_photo)  
