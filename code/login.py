@@ -1,4 +1,7 @@
 import tkinter as tk
+from tkinter import messagebox
+import re
+from connection import connect_to_db
 
 class LoginPage(tk.Frame):
     def __init__(self, parent):
@@ -11,11 +14,11 @@ class LoginPage(tk.Frame):
 
     def create_widgets(self):
         def show_hide_password():
-            if password_entry['show'] == '*':
-                password_entry.config(show='')
+            if self.password_entry['show'] == '*':
+                self.password_entry.config(show='')
                 show_hide_btn.config(image=self.hide_pass_img)
             else:
-                password_entry.config(show='*')
+                self.password_entry.config(show='*')
                 show_hide_btn.config(image=self.show_pass_img)
 
 
@@ -39,22 +42,22 @@ class LoginPage(tk.Frame):
                                fg=self.master.font_color1, bg='white')
         email_label.place(x=730, y=257)
 
-        email_entry = tk.Entry(self, font=('Poppins',18), width=38,
+        self.email_entry = tk.Entry(self, font=('Poppins',18), width=38,
                         highlightcolor=self.master.font_color1,
                         highlightbackground='grey',highlightthickness=2,
                         bd=0, bg='white')
-        email_entry.place(x=735, y=304)
+        self.email_entry.place(x=735, y=304)
 
         # password field
         password_label = tk.Label(self, text="Password",font=("Poppins Semibold", 20), 
                                fg=self.master.font_color1, bg='white')
         password_label.place(x=730, y=400)
 
-        password_entry = tk.Entry(self, font=('Poppins',18), width=38,
+        self.password_entry = tk.Entry(self, font=('Poppins',18), width=38,
                         highlightcolor=self.master.font_color1,
                         highlightbackground='grey',highlightthickness=2,
                         bd=0, bg='white', show='*')
-        password_entry.place(x=735, y=448)
+        self.password_entry.place(x=735, y=448)
 
         show_hide_btn = tk.Button(self, image=self.show_pass_img, 
                             bd=0, command=show_hide_password, bg='white')
@@ -63,7 +66,7 @@ class LoginPage(tk.Frame):
 
         # login button
         login_btn = tk.Button(self, text='Login', bg=self.master.bg_color1,
-                                     fg='white', font=('Poppins Semibold', 24), bd=0)
+                                     fg='white', font=('Poppins Semibold', 24), bd=0, command=self.login_user)
         login_btn.place(x=895, y=560, width=258, height=74)
 
 
@@ -80,6 +83,44 @@ class LoginPage(tk.Frame):
         here_label.place(x=1101, y=670)
         here_label.bind("<Button-1>", self.click_label_signup)
     
+
+    def login_user(self):
+        email = self.email_entry.get()
+        password = self.password_entry.get()
+
+        if not re.match(r'^[\w\.-]+@[\w\.-]+\.\w+$', email):
+            messagebox.showerror("Error", "Invalid email format!")
+            return
+        if not email or not password:
+            messagebox.showerror("Error", "Both fields are required!")
+            return
+
+        conn = connect_to_db()
+        cursor = conn.cursor()
+
+        try:
+            query = "SELECT UserId, RoleName FROM User WHERE Email = %s AND Password = %s"
+            cursor.execute(query, (email, password))
+            
+            result = cursor.fetchone()  
+            
+            if result:  
+                user_id, role_name = result  
+                messagebox.showinfo("Success", "Login successful!")
+
+                if role_name == 'Admin':
+                    self.master.admin_dashboard.set_user_id(user_id)
+                    self.master.show_frame(self.master.admin_dashboard)
+            else:
+                messagebox.showerror("Error", "Invalid email or password!")
+        except Exception as e:
+            messagebox.showerror("Error", f"An error occurred: {e}")
+        finally:
+            if cursor:
+                cursor.close()  
+            if conn:
+                conn.close()  
+
 
     def click_label_signup(self, event):
         self.master.show_frame(self.master.register_page)

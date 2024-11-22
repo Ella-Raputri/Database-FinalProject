@@ -50,11 +50,11 @@ class AdminBookingPage(tk.Frame):
         title_label.place(x=248, y=20)
 
         # name login
-        name_label = tk.Label(self.master, text="Name", font=("Poppins", 16), fg=self.master.font_color3, bg=self.master.admin_bg)
+        name_label = tk.Label(self, text="Name", font=("Poppins", 16), fg=self.master.font_color3, bg=self.master.admin_bg)
         name_label.place(x=-10, y=9, relx=1.0, anchor='ne')
 
         # email login
-        email_label = tk.Label(self.master, text="Email: ellaraputribinus2023@mail.com", font=("Poppins", 12), fg=self.master.font_color3, bg=self.master.admin_bg)
+        email_label = tk.Label(self, text="Email: ellaraputribinus2023@mail.com", font=("Poppins", 12), fg=self.master.font_color3, bg=self.master.admin_bg)
         email_label.place(x=-10, y=39, relx=1.0, anchor='ne')
 
         # filter dropdown

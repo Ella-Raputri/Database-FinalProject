@@ -3,8 +3,13 @@ import tkinter as tk
 class AdminDashboard(tk.Frame):
     def __init__(self, parent):
         super().__init__(parent)
+        self.user_id = None
         self.master = parent
         self.create_widgets()
+    
+    def set_user_id(self, user_id):
+        self.user_id = user_id
+        print("user print ", self.user_id)
 
     def create_navbar(self):
         # home
@@ -50,11 +55,11 @@ class AdminDashboard(tk.Frame):
         title_label.place(x=261, y=28)
 
         # name login
-        name_label = tk.Label(self.master, text="Name", font=("Poppins", 16), fg=self.master.font_color3, bg=self.master.admin_bg)
+        name_label = tk.Label(self, text="Name", font=("Poppins", 16), fg=self.master.font_color3, bg=self.master.admin_bg)
         name_label.place(x=-10, y=9, relx=1.0, anchor='ne')
 
         # email login
-        email_label = tk.Label(self.master, text="Email: ellaraputribinus2023@mail.com", font=("Poppins", 12), fg=self.master.font_color3, bg=self.master.admin_bg)
+        email_label = tk.Label(self, text="Email: ellaraputribinus2023@mail.com", font=("Poppins", 12), fg=self.master.font_color3, bg=self.master.admin_bg)
         email_label.place(x=-10, y=39, relx=1.0, anchor='ne')
 
         # patient amount

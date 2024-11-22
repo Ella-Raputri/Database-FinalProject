@@ -34,7 +34,7 @@ class App(tk.Tk):
         self.admin_patient_page = AdminPatientPage(self)
         self.admin_booking_page = AdminBookingPage(self)
 
-        self.show_frame(self.admin_patient_page)
+        self.show_frame(self.register_page)
     
 
     def center_window(self):
