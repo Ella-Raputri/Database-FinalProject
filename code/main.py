@@ -22,6 +22,7 @@ class App(tk.Tk):
         self.yellow_font = '#A38500'
         self.red_font = '#8F0101'
         self.bg_color1 = '#358FEE'
+        self.disabled_color = '#EBEBEB'
 
         # login and register
         self.login_page = LoginPage(self)
@@ -36,7 +37,9 @@ class App(tk.Tk):
         self.admin_booking_page = AdminBookingPage(self)
 
         self.show_frame(self.login_page)
-    
+
+    # user1@example.com
+
     def center_window(self):
         screen_width = self.winfo_screenwidth()
         screen_height = self.winfo_screenheight()

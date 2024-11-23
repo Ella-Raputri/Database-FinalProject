@@ -375,7 +375,7 @@ class AdminDashboard(tk.Frame):
             appointment_time = booking['AppointmentTime']
             
             label = tk.Label(content1, text=f"Dr. {doctor_name}, {patient_name} ({appointment_time})", 
-                             font=("Poppins", 11), fg=self.master.font_color2, bg='white')
+                             font=("Poppins", 11), wraplength=260, fg=self.master.font_color2, bg='white')
             label.pack(fill='x', pady=(0, 10))
 
             separator = tk.Frame(content1, height=1, bg=self.master.separator_color)

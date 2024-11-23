@@ -1,15 +1,53 @@
 import tkinter as tk
+from tkinter import messagebox
 from tkinter import ttk
+from connection import connect_to_db
 
 class AdminDoctorPage(tk.Frame):
     def __init__(self, parent):
         super().__init__(parent)
         self.master = parent
         self.user_id = None
+        self.email = None
+        self.name = None
+        self.branch_no = None
+
+        self.table_data = None
     
     def set_user_id(self, user_id):
         self.user_id = user_id
         self.create_widgets()
+    
+    def get_user_info(self):
+        try:
+            conn = connect_to_db()
+            with conn.cursor() as cursor:  
+                query1 = "SELECT Email, FirstName, LastName FROM User WHERE UserId = %s"
+                cursor.execute(query1, (self.user_id,))
+                result = cursor.fetchone()
+                
+                if result:  
+                    self.email, firstname, lastname = result
+                    self.name = f"{firstname} {lastname}"
+                else:
+                    messagebox.showerror("Error", "Invalid user.")
+                    return
+
+                query2 = "SELECT BranchNo FROM Admin WHERE AdminId = %s"
+                cursor.execute(query2, (self.user_id,))
+                result2 = cursor.fetchone()
+
+                if result2: 
+                    self.branch_no = result2[0]
+                else:
+                    messagebox.showerror("Error", "Admin details not found.")
+                    return
+
+        except Exception as e:
+            messagebox.showerror("Error", f"An error occurred: {e}")
+        finally:
+            if conn:
+                conn.close()
     
     def navigate_home(self):
         self.master.admin_dashboard.set_user_id(self.user_id)
@@ -56,7 +94,6 @@ class AdminDoctorPage(tk.Frame):
         booking_label = tk.Label(self, image=self.booking_icon, bd=0, bg='#5BB7F4')  
         booking_label.place(x=23, y=311)
 
-
     def create_widgets(self):
         # background
         self.background_photo = tk.PhotoImage(file='images/admin_default.png')  
@@ -69,12 +106,14 @@ class AdminDoctorPage(tk.Frame):
         title_label = tk.Label(self, text="Doctors", font=("Poppins", 38, "bold"), fg='black', bg=self.master.admin_bg)
         title_label.place(x=248, y=20)
 
+        self.get_user_info()
+
         # name login
-        name_label = tk.Label(self, text="Name", font=("Poppins", 16), fg=self.master.font_color3, bg=self.master.admin_bg)
+        name_label = tk.Label(self, text=self.name, font=("Poppins", 16), fg=self.master.font_color3, bg=self.master.admin_bg)
         name_label.place(x=-10, y=9, relx=1.0, anchor='ne')
 
         # email login
-        email_label = tk.Label(self, text="Email: ellaraputribinus2023@mail.com", font=("Poppins", 12), fg=self.master.font_color3, bg=self.master.admin_bg)
+        email_label = tk.Label(self, text=f"Email: {self.email}", font=("Poppins", 12), fg=self.master.font_color3, bg=self.master.admin_bg)
         email_label.place(x=-10, y=39, relx=1.0, anchor='ne')
 
         # filter dropdown
@@ -100,16 +139,15 @@ class AdminDoctorPage(tk.Frame):
                                 fg=self.master.font_color2, bg='white')
         self.specialty_label.place(x=10, y=11)
 
-        alist = ["First item", "Second item", "Third item", "Fourth item"]
+        splist = self.get_specialty_list()
 
-        if len(alist) >= 4:
+        if len(splist) >= 4:
             for i in range(3):  
-                label = tk.Label(self.specialty_panel, text=f"• {alist[i]}", font=("Poppins", 12), bg="white", anchor="w")
+                label = tk.Label(self.specialty_panel, text=f"• {splist[i][0]}", font=("Poppins", 12), bg="white", anchor="w")
                 label.place(x=10, y=49 + i * 25)  
-                
         else:
-            for i in range(len(alist)): 
-                label = tk.Label(self.specialty_panel, text=f"• {alist[i]}", font=("Poppins", 12), bg="white", anchor="w")
+            for i in range(len(splist)): 
+                label = tk.Label(self.specialty_panel, text=f"• {splist[i][0]}", font=("Poppins", 12), bg="white", anchor="w")
                 label.place(x=10, y=49 + i * 25)  
 
         
@@ -119,29 +157,17 @@ class AdminDoctorPage(tk.Frame):
 
 
         # schedule panel
-        self.schedule_panel = tk.Frame(self, bg='white',bd=1,relief='groove')
+        self.schedule_panel = tk.Frame(self, bg=self.master.disabled_color,bd=1,relief='groove')
         self.schedule_panel.place(x=1170, y=180 + 215 + 10, width=165, height=165)
 
         self.schedule_label = tk.Label(self.schedule_panel, text="Schedule", font=("Poppins Semibold", 16), 
-                                fg=self.master.font_color2, bg='white')
+                                fg=self.master.font_color2, bg=self.master.disabled_color)
         self.schedule_label.place(x=10, y=11)
 
-        alist = ["First item", "Second item", "Third item", "Fourth item"]
-
-        if len(alist) >= 3:
-            for i in range(2):  
-                label = tk.Label(self.schedule_panel, text=f"• {alist[i]}", font=("Poppins", 12), bg="white", anchor="w")
-                label.place(x=10, y=49 + i * 25)  
-                
-        else:
-            for i in range(len(alist)): 
-                label = tk.Label(self.schedule_panel, text=f"• {alist[i]}", font=("Poppins", 12), bg="white", anchor="w")
-                label.place(x=10, y=49 + i * 25)  
-
         
-        scview_more_btn = tk.Button(self.schedule_panel, text='View Details', bg=self.master.bg_color1,
-                                     fg='white', font=('Poppins', 12), command=self.open_schedule,bd=0)
-        scview_more_btn.place(x=30, y=120, width=110, height=32)
+        self.scview_more_btn = tk.Button(self.schedule_panel, text='View Details', bg=self.master.bg_color1,
+                                     fg='white', font=('Poppins', 11), command=self.open_schedule,bd=0)
+        self.scview_more_btn.place(x=30, y=120, width=110, height=32)
 
         # add btn
         add_btn = tk.Button(self, text='Add', bg='white',
@@ -160,33 +186,95 @@ class AdminDoctorPage(tk.Frame):
 
         self.create_table()
 
+    def get_specialty_list(self):
+        try:
+            conn = connect_to_db()
+            with conn.cursor() as cursor:  
+                query1 = "SELECT SpecialtyName FROM Specialty"
+                cursor.execute(query1)
+                result = cursor.fetchall()
+                return result  
+        except Exception as e:
+            messagebox.showerror("Error", f"An error occurred: {e}")
+            return []
+        finally:
+            if conn:
+                conn.close()
+        
+    def get_table_data(self):
+        try:
+            conn = connect_to_db()
+            with conn.cursor() as cursor:  
+                query1 = """
+                    SELECT 
+                        d.DoctorId,
+                        s.SpecialtyName AS Specialty,
+                        u.Email,
+                        CONCAT(u.FirstName, ' ', u.LastName) AS Name,
+                        CASE u.Gender 
+                            WHEN 0 THEN 'Male'
+                            ELSE 'Female'
+                        END AS Gender,
+                        u.PhoneNumber,
+                        u.City,
+                        u.AddressDetail AS Address,
+                        COUNT(b.BookingId) AS TotalBookings,
+                        SUM(
+                            CASE 
+                                WHEN MONTH(b.AppointmentDate) = MONTH(CURRENT_DATE) 
+                                    AND YEAR(b.AppointmentDate) = YEAR(CURRENT_DATE)
+                                THEN 1 
+                                ELSE 0 
+                            END
+                        ) AS ThisMonthsBookings
+                    FROM 
+                        Doctor d
+                    LEFT JOIN 
+                        Specialty s ON d.SpecialtyID = s.SpecialtyID
+                    LEFT JOIN 
+                        `User` u ON d.DoctorId = u.UserId
+                    LEFT JOIN 
+                        Booking b ON d.DoctorId = b.DoctorId
+                    WHERE d.BranchNo = %s
+                    GROUP BY 
+                        d.DoctorId, s.SpecialtyName, u.Email, u.FirstName, u.LastName,
+                        u.Gender, u.PhoneNumber, u.City, u.AddressDetail
+                    ORDER BY 
+                        d.DoctorId;                
+                """
+                cursor.execute(query1, (self.branch_no,))
+                result = cursor.fetchall()
+                return result  
+        except Exception as e:
+            messagebox.showerror("Error", f"An error occurred: {e}")
+            return []
+        finally:
+            if conn:
+                conn.close()
     
     def create_table(self):
+        data = self.get_table_data()
         style = ttk.Style()
-        style.configure("Treeview.Heading", font=("Poppins Semibold", 12))
+        style.configure("Treeview.Heading", font=("Poppins Semibold", 14))
+        style.configure("Treeview", rowheight=40, font=("Poppins", 12))
 
         table_frame = tk.Frame(self)
         table_frame.place(x=248, y=114, width=900, height=610)
 
-        columns = [f"Column {i+1}" for i in range(8)]  
+        columns = ['DoctorId','Specialty','Email','Name','Gender','Phone Number',
+                   'City','Address','Total Bookings',"This Month's Bookings"]  
         table = ttk.Treeview(table_frame, columns=columns, show="headings", height=10)
 
         for col in columns:
             table.heading(col, text=col)
             table.column(col, width=200, anchor=tk.CENTER)
 
-        for i in range(50):  
-            row = [f"Row {i+1} Col {j+1}" for j in range(8)]
-            table.insert("", tk.END, values=row)
-            table.insert("", tk.END, values=[""] * 8)
+        for i, row in enumerate(data):
+            tags = "odd_row" if i % 2 == 0 else "even_row"
+            table.insert("", tk.END, values=row, tags=(tags,))
         
         table.tag_configure("odd_row", background="#f2f7fd", font=("Poppins", 12))
         table.tag_configure("even_row", background="white", font=("Poppins", 12))
-
-        # # Assign odd/even row tags
-        for i, item in enumerate(table.get_children()):
-            table.item(item, tags=("odd_row" if ((i % 4 == 0) or (i % 4 == 1)) else "even_row"))
-            table.item(item, open=True)
 
         v_scroll = ttk.Scrollbar(table_frame, orient=tk.VERTICAL, command=table.yview)
         v_scroll.pack(side=tk.RIGHT, fill=tk.Y)
@@ -196,6 +284,57 @@ class AdminDoctorPage(tk.Frame):
 
         table.configure(yscrollcommand=v_scroll.set, xscrollcommand=h_scroll.set)
         table.pack(fill=tk.BOTH, expand=True)
+        table.bind("<<TreeviewSelect>>", lambda event: self.update_schedule_panel(table))
+
+    def update_schedule_panel(self, table):
+        selected_item = table.selection()
+        if selected_item:
+            item = table.item(selected_item[0])
+            doctor_id = item['values'][0]
+            schedule = self.get_doctor_schedule(doctor_id)
+
+            for widget in self.schedule_panel.winfo_children():
+                widget.destroy()  
+
+            self.schedule_panel.config(bg='white')
+            self.schedule_label = tk.Label(self.schedule_panel, text="Schedule", 
+                                           font=("Poppins Semibold", 15), fg=self.master.font_color2, bg='white')
+            self.schedule_label.place(x=6, y=11)
+
+            if schedule:
+                for i, entry in enumerate(schedule[:3]):  
+                    label = tk.Label(self.schedule_panel, text=f"• {entry}", font=("Poppins", 11), bg="white", anchor="w")
+                    label.place(x=6, y=49 + i * 25)
+            else:
+                label = tk.Label(self.schedule_panel, text="No schedule available", font=("Poppins", 11), bg="white", anchor="w")
+                label.place(x=6, y=49)
+            
+            self.scview_more_btn = tk.Button(self.schedule_panel, text='View Details', bg=self.master.bg_color1,
+                                     fg='white', font=('Poppins', 11), command=self.open_schedule,bd=0)
+            self.scview_more_btn.place(x=30, y=125, width=110, height=26)
+
+    def get_doctor_schedule(self, doctor_id):
+        try:
+            conn = connect_to_db()
+            with conn.cursor() as cursor:
+                query = """
+                    SELECT 
+                        CONCAT(LEFT(DayOfWeek, 3), ': ', 
+                        TIME_FORMAT(StartHour, '%H:%i'), '-', 
+                        TIME_FORMAT(EndHour, '%H:%i')) AS Schedule
+                    FROM DoctorSchedule
+                    WHERE DoctorId = %s
+                    ORDER BY FIELD(DayOfWeek, 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday')
+                """
+                cursor.execute(query, (doctor_id,))
+                result = cursor.fetchall()
+                return [row[0] for row in result]
+        except Exception as e:
+            messagebox.showerror("Error", f"An error occurred: {e}")
+            return []
+        finally:
+            if conn:
+                conn.close()
 
 
     def open_specialties(self):

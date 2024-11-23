@@ -40,8 +40,55 @@ WHERE ds.DayOfWeek = 'Saturday' AND b.BranchNo = 1;
 SELECT DoctorName, PatientName, DATE_FORMAT(AppointmentHour, '%H:%i') AS AppointmentTime
 FROM BranchBookings 
 WHERE BranchNo = 1 AND AppointmentDate = '2024/11/23';
-        
 
+SELECT 
+    d.DoctorId,
+    s.SpecialtyName AS Specialty,
+    u.Email,
+    CONCAT(u.FirstName, ' ', u.LastName) AS Name,
+    CASE u.Gender 
+        WHEN 0 THEN 'Male'
+        ELSE 'Female'
+    END AS Gender,
+    u.PhoneNumber,
+    u.City,
+    u.AddressDetail AS Address,
+    COUNT(b.BookingId) AS TotalBookings,
+    SUM(
+        CASE 
+            WHEN MONTH(b.AppointmentDate) = MONTH(CURRENT_DATE) 
+                 AND YEAR(b.AppointmentDate) = YEAR(CURRENT_DATE)
+            THEN 1 
+            ELSE 0 
+        END
+    ) AS ThisMonthsBookings
+FROM 
+    Doctor d
+LEFT JOIN 
+    Specialty s ON d.SpecialtyID = s.SpecialtyID
+LEFT JOIN 
+    `User` u ON d.DoctorId = u.UserId
+LEFT JOIN 
+    Booking b ON d.DoctorId = b.DoctorId
+WHERE d.BranchNo = 1
+GROUP BY 
+    d.DoctorId, s.SpecialtyName, u.Email, u.FirstName, u.LastName,
+    u.Gender, u.PhoneNumber, u.City, u.AddressDetail
+ORDER BY 
+    d.DoctorId;
+
+
+SELECT 
+	CONCAT(DayOfWeek, ': ', 
+	TIME_FORMAT(StartHour, '%H:%i'), '-', 
+	TIME_FORMAT(EndHour, '%H:%i')) AS Schedule
+FROM DoctorSchedule
+WHERE DoctorId = 'DOC0000002'
+ORDER BY FIELD(DayOfWeek, 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday');
+
+        
+select * from doctor;
+select * from user;
 select * from booking order by appointmentdate desc;
 
 
