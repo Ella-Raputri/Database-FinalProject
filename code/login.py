@@ -116,8 +116,6 @@ class LoginPage(tk.Frame):
         except Exception as e:
             messagebox.showerror("Error", f"An error occurred: {e}")
         finally:
-            if cursor:
-                cursor.close()  
             if conn:
                 conn.close()  
 

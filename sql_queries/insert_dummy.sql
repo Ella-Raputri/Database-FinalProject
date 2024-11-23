@@ -15,6 +15,25 @@ DROP PROCEDURE IF EXISTS InsertDummyUsers;
 DROP PROCEDURE IF EXISTS InsertDummySpecialties;
 DROP PROCEDURE IF EXISTS InsertDummyBranches;
 
+-- Disable foreign key checks temporarily
+SET FOREIGN_KEY_CHECKS = 0;
+
+-- Truncate all tables
+TRUNCATE TABLE Booking;
+TRUNCATE TABLE Admin;
+TRUNCATE TABLE MedicalHistory;
+TRUNCATE TABLE Patient;
+TRUNCATE TABLE DoctorSchedule;
+TRUNCATE TABLE Doctor;
+TRUNCATE TABLE Specialty;
+TRUNCATE TABLE `User`;
+TRUNCATE TABLE ClinicBranch;
+
+-- Enable foreign key checks again
+SET FOREIGN_KEY_CHECKS = 1;
+
+
+
 -- Insert 5 branches
 DELIMITER $$
 CREATE PROCEDURE InsertDummyBranches()
@@ -194,25 +213,107 @@ CALL InsertDummyDoctorSchedules();
 select * from doctorschedule;
 
 
--- Insert 1000 Bookings 
+-- -- Insert 1000 Bookings 
+-- DELIMITER $$
+-- CREATE PROCEDURE InsertDummyBookings()
+-- BEGIN
+--     DECLARE i INT DEFAULT 1;
+--     WHILE i <= @total_bookings DO
+--         INSERT INTO Booking (BookingId, PatientId, DoctorId, AppointmentDate, AppointmentHour, AppointmentStatus, CheckUpType, ReasonOfVisit)
+--         VALUES (CONCAT('BOK', LPAD(i, 7, '0')), 
+--                 CONCAT('PAT', LPAD(FLOOR(1 + RAND() * (@total_branches * @patients_per_branch)), 7, '0')), 
+--                 CONCAT('DOC', LPAD(FLOOR(1 + RAND() * (@total_branches * @doctors_per_branch)), 7, '0')),
+--                 DATE_ADD('2024-01-01', INTERVAL FLOOR(RAND() * 365) DAY),
+--                 SEC_TO_TIME(FLOOR(RAND() * 86400)),
+--                 CASE WHEN RAND() < 0.5 THEN 'Completed' ELSE 'Pending' END,
+--                 CONCAT('Type ', FLOOR(1 + RAND() * 5)), 
+--                 CONCAT('Visit Reason ', i));
+--         SET i = i + 1;
+--     END WHILE;
+-- END$$
+-- DELIMITER ;
+-- CALL InsertDummyBookings();
+
+truncate table Booking;
+drop procedure InsertDummyBookings;
 DELIMITER $$
-CREATE PROCEDURE InsertDummyBookings()
+
+CREATE PROCEDURE InsertDummyBookings(
+    IN total_bookings INT
+)
 BEGIN
     DECLARE i INT DEFAULT 1;
-    WHILE i <= @total_bookings DO
-        INSERT INTO Booking (BookingId, PatientId, DoctorId, AppointmentDate, AppointmentHour, AppointmentStatus, CheckUpType, ReasonOfVisit)
-        VALUES (CONCAT('BOK', LPAD(i, 7, '0')), 
-                CONCAT('PAT', LPAD(FLOOR(1 + RAND() * (@total_branches * @patients_per_branch)), 7, '0')), 
-                CONCAT('DOC', LPAD(FLOOR(1 + RAND() * (@total_branches * @doctors_per_branch)), 7, '0')),
-                DATE_ADD('2024-01-01', INTERVAL FLOOR(RAND() * 365) DAY),
-                SEC_TO_TIME(FLOOR(RAND() * 86400)),
-                CASE WHEN RAND() < 0.5 THEN 'Completed' ELSE 'Pending' END,
-                CONCAT('Type ', FLOOR(1 + RAND() * 5)), 
-                CONCAT('Visit Reason ', i));
+    DECLARE doctor_id VARCHAR(10);
+    DECLARE schedule_id VARCHAR(10);
+    DECLARE day_of_week VARCHAR(20);
+    DECLARE start_hour TIME;
+    DECLARE end_hour TIME;
+    DECLARE appointment_date DATE;
+    DECLARE appointment_hour TIME;
+    DECLARE random_patient_id VARCHAR(10);
+
+    -- Cursor to iterate through DoctorSchedule
+    DECLARE schedule_cursor CURSOR FOR
+        SELECT DoctorId, ScheduleId, DayOfWeek, StartHour, EndHour
+        FROM DoctorSchedule;
+
+    -- Handler for when the cursor reaches the end
+    DECLARE CONTINUE HANDLER FOR NOT FOUND SET schedule_id = NULL;
+
+    -- Open the cursor
+    OPEN schedule_cursor;
+
+    -- Main loop to generate bookings
+    WHILE i <= total_bookings DO
+        FETCH schedule_cursor INTO doctor_id, schedule_id, day_of_week, start_hour, end_hour;
+
+        -- If no more schedules, restart the cursor
+        IF schedule_id IS NULL THEN
+            CLOSE schedule_cursor;
+            OPEN schedule_cursor;
+            FETCH schedule_cursor INTO doctor_id, schedule_id, day_of_week, start_hour, end_hour;
+        END IF;
+
+        -- Generate a random appointment date matching the schedule's day_of_week
+        SET appointment_date = DATE_ADD('2024-01-01', INTERVAL FLOOR(RAND() * 365) DAY);
+        WHILE DAYNAME(appointment_date) != day_of_week DO
+            SET appointment_date = DATE_ADD(appointment_date, INTERVAL 1 DAY);
+        END WHILE;
+
+        -- Generate a random appointment time within the schedule's range
+        SET appointment_hour = ADDTIME(start_hour, SEC_TO_TIME(FLOOR(RAND() * TIME_TO_SEC(TIMEDIFF(end_hour, start_hour)))));
+
+        -- Pick a random patient
+        SELECT PatientId INTO random_patient_id
+        FROM Patient
+        ORDER BY RAND()
+        LIMIT 1;
+
+        -- Insert the booking
+        INSERT INTO Booking (
+            BookingId, PatientId, DoctorId, AppointmentDate, AppointmentHour, AppointmentStatus, CheckUpType, ReasonOfVisit
+        )
+        VALUES (
+            CONCAT('BOK', LPAD(i, 7, '0')),
+            random_patient_id,
+            doctor_id,
+            appointment_date,
+            appointment_hour,
+            CASE WHEN RAND() < 0.5 THEN 'Completed' ELSE 'Pending' END,
+            CONCAT('Type ', FLOOR(1 + RAND() * 5)),
+            CONCAT('Visit Reason ', i)
+        );
+
+        -- Increment the counter
         SET i = i + 1;
     END WHILE;
+
+    -- Close the cursor
+    CLOSE schedule_cursor;
 END$$
+
 DELIMITER ;
-CALL InsertDummyBookings();
+
+CALL InsertDummyBookings(7000);
 
 select * from booking;

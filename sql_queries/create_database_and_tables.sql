@@ -91,6 +91,25 @@ CREATE TABLE Booking (
     FOREIGN KEY (DoctorId) REFERENCES Doctor(DoctorId) 
 );
 
+CREATE VIEW BranchBookings AS
+SELECT 
+    b.BookingId,
+    b.PatientId,
+    CONCAT(pu.FirstName, ' ', pu.LastName) AS PatientName,
+    b.DoctorId,
+    CONCAT(du.FirstName, ' ', du.LastName) AS DoctorName,
+    b.AppointmentDate,
+    b.AppointmentHour,
+    b.AppointmentStatus,
+    b.CheckUpType,
+    b.ReasonOfVisit,
+    d.BranchNo
+FROM 
+    Booking b
+INNER JOIN 
+    Doctor d ON b.DoctorId = d.DoctorId
+INNER JOIN 
+    `User` du ON d.DoctorId = du.UserId
+INNER JOIN 
+    `User` pu ON b.PatientId = pu.UserId;
 
-Select * from booking;
-Select * from user
