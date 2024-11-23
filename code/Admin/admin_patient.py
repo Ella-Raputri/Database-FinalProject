@@ -6,36 +6,56 @@ class AdminPatientPage(tk.Frame):
     def __init__(self, parent):
         super().__init__(parent)
         self.master = parent
+        self.user_id = None
+
+    def set_user_id(self, user_id):
+        self.user_id = user_id
         self.create_widgets()
+    
+    def navigate_doctor(self):
+        self.master.admin_doctor_page.set_user_id(self.user_id)
+        self.master.show_frame(self.master.admin_doctor_page)
+    
+    def navigate_home(self):
+        self.master.admin_dashboard.set_user_id(self.user_id)
+        self.master.show_frame(self.master.admin_dashboard)
+    
+    def navigate_booking(self):
+        self.master.admin_booking_page.set_user_id(self.user_id)
+        self.master.show_frame(self.master.admin_booking_page)
     
     def create_navbar(self):
         # home
-        self.home_btn = tk.Label(self, text="Home", bd=0, bg='#69C6F7', fg="white", font=("Poppins Semibold", 18))
-        self.home_btn.place(x=72, y=125)
+        self.home_btn = tk.Button(self, text="Home", bd=0, bg='#69C6F7', fg="white", 
+                                  font=("Poppins Semibold", 18), command=self.navigate_home)
+        self.home_btn.place(x=0, y=120, width=213, height=52)
         self.home_icon = tk.PhotoImage(file='images/home_icon.png')  
         home_label = tk.Label(self, image=self.home_icon, bd=0, bg='#69C6F7')  
-        home_label.place(x=30, y=132)
+        home_label.place(x=23, y=130)
 
         # doctor
-        self.doctor_btn = tk.Label(self, text="Doctor", bd=0,bg='#64C1F6', fg="white", font=("Poppins Semibold", 18))
-        self.doctor_btn.place(x=72, y=191)
+        self.doctor_btn = tk.Button(self, text="Doctor", bd=0,bg='#64C1F6', fg="white", 
+                                    font=("Poppins Semibold", 18), command=self.navigate_doctor)
+        self.doctor_btn.place(x=0, y=183, width=213, height=52)
         self.doctor_icon = tk.PhotoImage(file='images/doctor_icon.png')  
         doctor_label = tk.Label(self, image=self.doctor_icon, bd=0, bg='#64C1F6')  
-        doctor_label.place(x=30, y=198)
+        doctor_label.place(x=23, y=196)
 
         # patient
-        self.patient_btn = tk.Button(self, text="Patient", bd=0,bg=self.master.bg_color1, fg="white", font=("Poppins Semibold", 18))
+        self.patient_btn = tk.Button(self, text="Patient", bd=0,bg=self.master.bg_color1, fg="white", 
+                                     font=("Poppins Semibold", 18))
         self.patient_btn.place(x=0, y=243, width=213, height=52)
         self.patient_icon = tk.PhotoImage(file='images/patient_icon.png')  
         patient_label = tk.Label(self, image=self.patient_icon, bd=0, bg=self.master.bg_color1)  
-        patient_label.place(x=30, y=255)
+        patient_label.place(x=23, y=255)
 
         # booking
-        self.booking_btn = tk.Label(self, text="Booking", bd=0,bg='#5BB7F4', fg="white", font=("Poppins Semibold", 18))
-        self.booking_btn.place(x=72, y=310)
+        self.booking_btn = tk.Button(self, text="Booking", bd=0,bg='#5BB7F4', fg="white", 
+                                     font=("Poppins Semibold", 18),command=self.navigate_booking)
+        self.booking_btn.place(x=0, y=300, width=213, height=52)
         self.booking_icon = tk.PhotoImage(file='images/booking_icon.png')  
         booking_label = tk.Label(self, image=self.booking_icon, bd=0, bg='#5BB7F4')  
-        booking_label.place(x=30, y=317)
+        booking_label.place(x=23, y=311)
 
 
     def create_widgets(self):

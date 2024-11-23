@@ -115,34 +115,53 @@ class AdminDashboard(tk.Frame):
             if conn:
                 conn.close()
 
+    def navigate_doctor(self):
+        self.master.admin_doctor_page.set_user_id(self.user_id)
+        self.master.show_frame(self.master.admin_doctor_page)
+    
+    def navigate_patient(self):
+        self.master.admin_patient_page.set_user_id(self.user_id)
+        self.master.show_frame(self.master.admin_patient_page)
+    
+    def navigate_booking(self):
+        self.master.admin_booking_page.set_user_id(self.user_id)
+        self.master.show_frame(self.master.admin_booking_page)
+        
     def create_navbar(self):      
         # home
-        self.home_btn = tk.Button(self, text="Home", bd=0, bg=self.master.bg_color1, fg="white", font=("Poppins Semibold", 18))
+        self.home_btn = tk.Button(self, text="Home", bd=0, bg=self.master.bg_color1, fg="white", 
+                                  font=("Poppins Semibold", 18))
         self.home_btn.place(x=0, y=120, width=213, height=52)
         self.home_icon = tk.PhotoImage(file='images/home_icon.png')  
         home_label = tk.Label(self, image=self.home_icon, bd=0, bg=self.master.bg_color1)  
-        home_label.place(x=30, y=132)
+        home_label.place(x=23, y=130)
 
         # doctor
-        self.doctor_btn = tk.Label(self, text="Doctor", bd=0,bg='#64C1F6', fg="white", font=("Poppins Semibold", 18))
-        self.doctor_btn.place(x=72, y=191)
+        self.doctor_btn = tk.Button(self, text="Doctor", bd=0,bg='#64C1F6', fg="white", 
+                                    font=("Poppins Semibold", 18),
+                                    command=self.navigate_doctor)
+        self.doctor_btn.place(x=0, y=183,  width=213, height=52)
         self.doctor_icon = tk.PhotoImage(file='images/doctor_icon.png')  
         doctor_label = tk.Label(self, image=self.doctor_icon, bd=0, bg='#64C1F6')  
-        doctor_label.place(x=30, y=198)
+        doctor_label.place(x=23, y=196)
 
         # patient
-        self.patient_btn = tk.Label(self, text="Patient", bd=0,bg='#5FBBF5', fg="white", font=("Poppins Semibold", 18))
-        self.patient_btn.place(x=72, y=248)
+        self.patient_btn = tk.Button(self, text="Patient", bd=0,bg='#5FBBF5', fg="white", 
+                                     font=("Poppins Semibold", 18),
+                                     command=self.navigate_patient)
+        self.patient_btn.place(x=0, y=243, width=213, height=52)
         self.patient_icon = tk.PhotoImage(file='images/patient_icon.png')  
         patient_label = tk.Label(self, image=self.patient_icon, bd=0, bg='#5FBBF5')  
-        patient_label.place(x=30, y=255)
+        patient_label.place(x=23, y=255)
 
         # booking
-        self.booking_btn = tk.Label(self, text="Booking", bd=0,bg='#5BB7F4', fg="white", font=("Poppins Semibold", 18))
-        self.booking_btn.place(x=72, y=310)
+        self.booking_btn = tk.Button(self, text=" Booking", bd=0,bg='#5BB7F4', fg="white", 
+                                     font=("Poppins Semibold", 18),
+                                     command=self.navigate_booking)
+        self.booking_btn.place(x=0, y=300, width=213, height=52)
         self.booking_icon = tk.PhotoImage(file='images/booking_icon.png')  
         booking_label = tk.Label(self, image=self.booking_icon, bd=0, bg='#5BB7F4')  
-        booking_label.place(x=30, y=317)
+        booking_label.place(x=23, y=311)
 
     def get_today_info(self):
         try:
@@ -271,8 +290,6 @@ class AdminDashboard(tk.Frame):
         canvas.draw()
         
         canvas.get_tk_widget().place(x=265, y=137, width=410, height=300)  
-
-
 
     def create_widgets(self):        
         self.get_user_info()
@@ -413,7 +430,6 @@ class AdminDashboard(tk.Frame):
         view_more_btn = tk.Button(self, text='View More', bg=self.master.bg_color1,
                                      fg='white', font=('Poppins', 12), bd=0)
         view_more_btn.place(x=571, y=673, width=99, height=33)
-
 
     def on_mouse_wheel(self, event, canvas):
         if event.delta > 0:  # Scroll up

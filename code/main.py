@@ -29,14 +29,14 @@ class App(tk.Tk):
 
         # admin
         self.admin_bg = '#F5F5F5'
-        self.admin_dashboard = AdminDashboard(self)
+        
         self.admin_doctor_page = AdminDoctorPage(self)
+        self.admin_dashboard = AdminDashboard(self)
         self.admin_patient_page = AdminPatientPage(self)
         self.admin_booking_page = AdminBookingPage(self)
 
         self.show_frame(self.login_page)
     
-
     def center_window(self):
         screen_width = self.winfo_screenwidth()
         screen_height = self.winfo_screenheight()
