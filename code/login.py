@@ -85,8 +85,8 @@ class LoginPage(tk.Frame):
     
 
     def login_user(self):
-        email = self.email_entry.get()
-        password = self.password_entry.get()
+        email = self.email_entry.get().strip()
+        password = self.password_entry.get().strip()
 
         if not re.match(r'^[\w\.-]+@[\w\.-]+\.\w+$', email):
             messagebox.showerror("Error", "Invalid email format!")

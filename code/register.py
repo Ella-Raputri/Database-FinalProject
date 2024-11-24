@@ -196,16 +196,16 @@ class RegisterPage(tk.Frame):
     
 
     def register_user(self):
-        email = self.email_entry.get()
-        password = self.password_entry.get()
-        conf_password = self.confirm_password_entry.get()
-        fname = self.fname_entry.get()
-        lname = self.lname_entry.get()
-        phone_num = self.phone_entry.get()
+        email = self.email_entry.get().strip()
+        password = self.password_entry.get().strip()
+        conf_password = self.confirm_password_entry.get().strip()
+        fname = self.fname_entry.get().strip()
+        lname = self.lname_entry.get().strip()
+        phone_num = self.phone_entry.get().strip()
         gender_val = self.gender_combobox.get()
-        dob = self.dob_entry.get()
-        city = self.city_entry.get()
-        address = self.address_entry.get()        
+        dob = self.dob_entry.get().strip()
+        city = self.city_entry.get().strip()
+        address = self.address_entry.get().strip()        
         
         if not email or not password or not conf_password or not fname \
             or not lname or not phone_num or not dob or not city or not address:

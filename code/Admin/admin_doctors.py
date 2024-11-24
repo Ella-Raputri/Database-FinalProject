@@ -13,6 +13,7 @@ class AdminDoctorPage(tk.Frame):
         self.branch_no = None
 
         self.table_data = None
+        self.specialty_data = None
     
     def set_user_id(self, user_id):
         self.user_id = user_id
@@ -336,6 +337,26 @@ class AdminDoctorPage(tk.Frame):
             if conn:
                 conn.close()
 
+    def get_specialty_data(self):
+        try:
+            conn = connect_to_db()
+            with conn.cursor() as cursor:
+                query = """
+                    SELECT 
+                        SpecialtyId,
+                        SpecialtyName, 
+                        SpecialtyDescription
+                    FROM Specialty
+                """
+                cursor.execute(query)
+                result = cursor.fetchall()
+                self.specialty_data = [(row[0], row[1], row[2]) for row in result]
+        except Exception as e:
+            messagebox.showerror("Error", f"An error occurred: {e}")
+            self.specialty_data = []
+        finally:
+            if conn:
+                conn.close()
 
     def open_specialties(self):
         child_window = tk.Toplevel(self)
@@ -363,33 +384,33 @@ class AdminDoctorPage(tk.Frame):
 
         self.delete_photo = tk.PhotoImage(file='images/delete_icon.png')
         self.edit_photo = tk.PhotoImage(file='images/edit_icon.png')
+        self.get_specialty_data()
 
-        for i in range(20):
-            # row container 
+        for i, (id, name, desc) in enumerate(self.specialty_data):
+            # row container
             row_frame = tk.Frame(content1, bg='white')
             row_frame.pack(fill='x', pady=(0, 10))
 
             # name label
-            name_label = tk.Label(row_frame, text=f"Cardiology {i+1}", font=("Poppins Medium", 16), 
+            name_label = tk.Label(row_frame, text=name, font=("Poppins Medium", 16), 
                                 fg=self.master.font_color2, bg='white', anchor="w")
             name_label.grid(row=0, column=0, padx=(0, 10), sticky="w")
 
             # edit button
             edit_button = tk.Button(row_frame, image=self.edit_photo, 
-                                   command=lambda i=i: print(f'edit sp {i+1}'))
+                                    command=lambda id=id, child_window=child_window: self.edit_specialty(id,child_window))
             edit_button.grid(row=0, column=1, padx=(10, 5), sticky="e")
 
             # delete button            
             delete_button = tk.Button(row_frame, image=self.delete_photo, 
-                                    command=lambda i=i: print(f'delete sp {i+1}'))
+                                    command=lambda id=id, name=name, child_window=child_window: self.delete_specialty(id,name,child_window))
             delete_button.grid(row=0, column=2, padx=(5, 0), sticky="e")
 
             # desc label
-            desc_label = tk.Label(row_frame, text="This is a wrapped label. The text will wrap if it exceeds the specified width.",
-                                font=("Poppins", 12), fg=self.master.font_color2, bg='white', 
+            desc_label = tk.Label(row_frame, text=desc, font=("Poppins", 12), 
+                                fg=self.master.font_color2, bg='white', 
                                 wraplength=450, justify="left", anchor="w")
             desc_label.grid(row=1, column=0, columnspan=3, sticky="w")
-    
 
         content1.update_idletasks()
         canvas1.config(scrollregion=canvas1.bbox("all"))
@@ -398,7 +419,7 @@ class AdminDoctorPage(tk.Frame):
         # add btn
         self.add_photo = tk.PhotoImage(file='images/add_icon.png')
         add_button = tk.Button(child_window, image=self.add_photo, 
-                                command=lambda: print(f'add sp'))
+                                command=self.add_specialty)
         add_button.place(x=475, y=100)
 
         # ok btn
@@ -407,6 +428,164 @@ class AdminDoctorPage(tk.Frame):
         ok_button.place(x=211, y=615, width=116, height=40)
 
         child_window.resizable(False, False)
+
+    def add_specialty(self):
+        add_window = tk.Toplevel(self)
+        add_window.title("Add New Specialty")
+        add_window.geometry("500x400")
+        add_window.configure(bg="white")
+
+        tk.Label(add_window, text="Specialty Name:", font=("Poppins", 14), bg="white").pack(pady=(20, 5))
+        spname_entry = tk.Entry(add_window, font=("Poppins", 12), width=30, bd=2, relief="solid")
+        spname_entry.pack(pady=5)
+
+        tk.Label(add_window, text="Specialty Description:", font=("Poppins", 14), bg="white").pack(pady=(20, 5))
+        spdesc_entry = tk.Text(add_window, font=("Poppins", 12), width=30, height=5, bd=2, relief="solid")
+        spdesc_entry.pack(pady=5)
+
+        def save_specialty():
+            spname = spname_entry.get().strip()
+            spdesc = spdesc_entry.get("1.0", tk.END).strip()
+
+            if not spname or not spdesc:
+                messagebox.showerror("Error", "All fields are required!")
+                return
+
+            try:
+                conn = connect_to_db()
+                with conn.cursor() as cursor:
+                    cursor.execute("SELECT SpecialtyID FROM Specialty ORDER BY SpecialtyID DESC LIMIT 1")
+                    last_sp_id = cursor.fetchone()
+
+                    if last_sp_id:
+                        last_id = last_sp_id[0]  
+                        numeric_part = int(last_id[2:])  
+                        new_numeric_part = numeric_part + 1
+                    else:
+                        new_numeric_part = 1
+                    
+                    new_sp_id = f"SP{str(new_numeric_part).zfill(7)}"
+
+                    query = """
+                        INSERT INTO Specialty (SpecialtyId, SpecialtyName, SpecialtyDescription)
+                        VALUES (%s, %s, %s)
+                    """
+                    cursor.execute(query, (new_sp_id,spname, spdesc))
+                    conn.commit()
+                    messagebox.showinfo("Success", "New specialty added successfully!")
+            except Exception as e:
+                messagebox.showerror("Error", f"Failed to add specialty: {e}")
+            finally:
+                if conn:
+                    conn.close()
+                add_window.destroy() 
+                self.open_specialties()  
+
+        save_button = tk.Button(add_window, text="Save", font=("Poppins", 14), bg=self.master.bg_color1, fg="white", command=save_specialty)
+        save_button.pack(pady=(20, 10), ipadx=10, ipady=2)
+
+    def edit_specialty(self, specialty_id, spwindow):
+        edit_window = tk.Toplevel(self)
+        edit_window.title("Edit Specialty")
+        edit_window.geometry("500x400")
+        edit_window.configure(bg="white")
+
+        try:
+            conn = connect_to_db()
+            with conn.cursor() as cursor:
+                query = "SELECT SpecialtyName, SpecialtyDescription FROM Specialty WHERE SpecialtyID = %s"
+                cursor.execute(query, (specialty_id,))
+                specialty = cursor.fetchone()
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to fetch specialty: {e}")
+            return
+        finally:
+            if conn:
+                conn.close()
+
+        if not specialty:
+            messagebox.showerror("Error", "Specialty not found!")
+            return
+
+        current_name, current_description = specialty
+
+        tk.Label(edit_window, text="Specialty Name:", font=("Poppins", 14), bg="white").pack(pady=(20, 5))
+        spname_entry = tk.Entry(edit_window, font=("Poppins", 12), width=30, bd=2, relief="solid")
+        spname_entry.pack(pady=5)
+        spname_entry.insert(0, current_name)  
+
+        tk.Label(edit_window, text="Specialty Description:", font=("Poppins", 14), bg="white").pack(pady=(20, 5))
+        spdesc_entry = tk.Text(edit_window, font=("Poppins", 12), width=30, height=5, bd=2, relief="solid")
+        spdesc_entry.pack(pady=5)
+        spdesc_entry.insert("1.0", current_description)  
+
+        def save_changes():
+            new_name = spname_entry.get().strip()
+            new_description = spdesc_entry.get("1.0", tk.END).strip()
+
+            if not new_name or not new_description:
+                messagebox.showerror("Error", "All fields are required!")
+                return
+
+            try:
+                conn = connect_to_db()
+                with conn.cursor() as cursor:
+                    query = """
+                        UPDATE Specialty
+                        SET SpecialtyName = %s, SpecialtyDescription = %s
+                        WHERE SpecialtyID = %s
+                    """
+                    cursor.execute(query, (new_name, new_description, specialty_id))
+                    conn.commit()
+                    messagebox.showinfo("Success", "Specialty updated successfully!")
+            except Exception as e:
+                messagebox.showerror("Error", f"Failed to update specialty: {e}")
+            finally:
+                if conn:
+                    conn.close()
+                    
+                edit_window.destroy()
+                spwindow.destroy()  # Ensure old child_window is properly closed
+                self.open_specialties() 
+
+        save_button = tk.Button(edit_window, text="Save", font=("Poppins", 14), bg=self.master.bg_color1, fg="white", command=save_changes)
+        save_button.pack(pady=(20, 10), ipadx=10, ipady=2)
+
+    def delete_specialty(self, specialty_id, specialty_name, spwindow):
+        try:
+            conn = connect_to_db()
+            if not conn:
+                messagebox.showerror("Error", "Database connection failed.")
+                return
+
+            with conn.cursor() as cursor:
+                query = "SELECT COUNT(DoctorId) FROM Doctor WHERE SpecialtyId = %s"
+                cursor.execute(query, (specialty_id,))
+                amt = cursor.fetchone()[0]  
+
+                if amt > 0:
+                    messagebox.showerror(
+                        "Error",
+                        f"Cannot delete '{specialty_name}' because there are {amt} doctor(s) with this specialty."
+                    )
+                    return
+
+                confirm = messagebox.askyesno(
+                    "Confirm Delete",
+                    f"Are you sure you want to delete the specialty '{specialty_name}'?"
+                )
+                if confirm:
+                    query = "DELETE FROM Specialty WHERE SpecialtyId = %s"
+                    cursor.execute(query, (specialty_id,))
+                    conn.commit()
+                    messagebox.showinfo("Success", f"Specialty '{specialty_name}' has been deleted.")
+                    spwindow.destroy()
+                    self.open_specialties()  
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to delete specialty: {e}")
+        finally:
+            if conn:
+                conn.close()
 
 
     def open_schedule(self):

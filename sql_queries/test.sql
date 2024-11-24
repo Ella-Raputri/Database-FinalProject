@@ -86,6 +86,8 @@ FROM DoctorSchedule
 WHERE DoctorId = 'DOC0000002'
 ORDER BY FIELD(DayOfWeek, 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday');
 
+SELECT * FROM Specialty;
+SELECT COUNT(DoctorId) FROM Doctor WHERE SpecialtyID = 'SP0000020';
         
 select * from doctor;
 select * from user;
