@@ -12,8 +12,10 @@ class AdminDoctorPage(tk.Frame):
         self.name = None
         self.branch_no = None
 
-        self.table_data = None
+        self.table = None
         self.specialty_data = None
+        self.doctor_id = None
+        self.doctor_name = None
     
     def set_user_id(self, user_id):
         self.user_id = user_id
@@ -167,7 +169,7 @@ class AdminDoctorPage(tk.Frame):
 
         
         self.scview_more_btn = tk.Button(self.schedule_panel, text='View Details', bg=self.master.bg_color1,
-                                     fg='white', font=('Poppins', 11), command=self.open_schedule,bd=0)
+                                     fg='white', font=('Poppins', 11),state=tk.DISABLED)
         self.scview_more_btn.place(x=30, y=120, width=110, height=32)
 
         # add btn
@@ -264,35 +266,36 @@ class AdminDoctorPage(tk.Frame):
 
         columns = ['DoctorId','Specialty','Email','Name','Gender','Phone Number',
                    'City','Address','Total Bookings',"This Month's Bookings"]  
-        table = ttk.Treeview(table_frame, columns=columns, show="headings", height=10)
+        self.table = ttk.Treeview(table_frame, columns=columns, show="headings", height=10)
 
         for col in columns:
-            table.heading(col, text=col)
-            table.column(col, width=200, anchor=tk.CENTER)
+            self.table.heading(col, text=col)
+            self.table.column(col, width=200, anchor=tk.CENTER)
 
         for i, row in enumerate(data):
             tags = "odd_row" if i % 2 == 0 else "even_row"
-            table.insert("", tk.END, values=row, tags=(tags,))
+            self.table.insert("", tk.END, values=row, tags=(tags,))
         
-        table.tag_configure("odd_row", background="#f2f7fd", font=("Poppins", 12))
-        table.tag_configure("even_row", background="white", font=("Poppins", 12))
+        self.table.tag_configure("odd_row", background="#f2f7fd", font=("Poppins", 12))
+        self.table.tag_configure("even_row", background="white", font=("Poppins", 12))
 
-        v_scroll = ttk.Scrollbar(table_frame, orient=tk.VERTICAL, command=table.yview)
+        v_scroll = ttk.Scrollbar(table_frame, orient=tk.VERTICAL, command=self.table.yview)
         v_scroll.pack(side=tk.RIGHT, fill=tk.Y)
 
-        h_scroll = ttk.Scrollbar(table_frame, orient=tk.HORIZONTAL, command=table.xview)
+        h_scroll = ttk.Scrollbar(table_frame, orient=tk.HORIZONTAL, command=self.table.xview)
         h_scroll.pack(side=tk.BOTTOM, fill=tk.X)
 
-        table.configure(yscrollcommand=v_scroll.set, xscrollcommand=h_scroll.set)
-        table.pack(fill=tk.BOTH, expand=True)
-        table.bind("<<TreeviewSelect>>", lambda event: self.update_schedule_panel(table))
+        self.table.configure(yscrollcommand=v_scroll.set, xscrollcommand=h_scroll.set)
+        self.table.pack(fill=tk.BOTH, expand=True)
+        self.table.bind("<<TreeviewSelect>>", lambda event: self.update_schedule_panel(event))
 
-    def update_schedule_panel(self, table):
-        selected_item = table.selection()
+    def update_schedule_panel(self, event=None):
+        selected_item = self.table.selection()
         if selected_item:
-            item = table.item(selected_item[0])
-            doctor_id = item['values'][0]
-            schedule = self.get_doctor_schedule(doctor_id)
+            item = self.table.item(selected_item[0])
+            self.doctor_id = item['values'][0]
+            self.schedule = self.get_doctor_schedule(self.doctor_id)
+            self.doctor_name = item['values'][3]
 
             for widget in self.schedule_panel.winfo_children():
                 widget.destroy()  
@@ -302,9 +305,10 @@ class AdminDoctorPage(tk.Frame):
                                            font=("Poppins Semibold", 15), fg=self.master.font_color2, bg='white')
             self.schedule_label.place(x=6, y=11)
 
-            if schedule:
-                for i, entry in enumerate(schedule[:3]):  
-                    label = tk.Label(self.schedule_panel, text=f"• {entry}", font=("Poppins", 11), bg="white", anchor="w")
+            if self.schedule:
+                for i, entry in enumerate(self.schedule[:3]):  
+                    text, id = entry
+                    label = tk.Label(self.schedule_panel, text=f"• {text}", font=("Poppins", 11), bg="white", anchor="w")
                     label.place(x=6, y=49 + i * 25)
             else:
                 label = tk.Label(self.schedule_panel, text="No schedule available", font=("Poppins", 11), bg="white", anchor="w")
@@ -322,14 +326,16 @@ class AdminDoctorPage(tk.Frame):
                     SELECT 
                         CONCAT(LEFT(DayOfWeek, 3), ': ', 
                         TIME_FORMAT(StartHour, '%H:%i'), '-', 
-                        TIME_FORMAT(EndHour, '%H:%i')) AS Schedule
+                        TIME_FORMAT(EndHour, '%H:%i')) AS Schedule,
+                        ScheduleId
                     FROM DoctorSchedule
                     WHERE DoctorId = %s
-                    ORDER BY FIELD(DayOfWeek, 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday')
+                    ORDER BY FIELD(DayOfWeek, 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'),
+                    StartHour, EndHour;
                 """
                 cursor.execute(query, (doctor_id,))
                 result = cursor.fetchall()
-                return [row[0] for row in result]
+                return [(row[0], row[1]) for row in result]
         except Exception as e:
             messagebox.showerror("Error", f"An error occurred: {e}")
             return []
@@ -493,7 +499,7 @@ class AdminDoctorPage(tk.Frame):
         try:
             conn = connect_to_db()
             with conn.cursor() as cursor:
-                query = "SELECT SpecialtyName, SpecialtyDescription FROM Specialty WHERE SpecialtyID = %s"
+                query = "SELECT SpecialtyName, SpecialtyDescription FROM Specialty WHERE SpecialtyId = %s"
                 cursor.execute(query, (specialty_id,))
                 specialty = cursor.fetchone()
         except Exception as e:
@@ -587,7 +593,17 @@ class AdminDoctorPage(tk.Frame):
             if conn:
                 conn.close()
 
+    def is_valid_time(self, time_str):
+        try:
+            parts = time_str.split(":")
+            if len(parts) != 2:
+                return False  
 
+            hour, minute = map(int, parts)  
+            return 0 <= hour < 24 and 0 <= minute < 60  
+        except (ValueError, TypeError):
+            return False 
+    
     def open_schedule(self):
         child_window = tk.Toplevel(self)
         child_window.configure(bg="white")
@@ -595,9 +611,10 @@ class AdminDoctorPage(tk.Frame):
         child_window.geometry("533x676")  
 
         # schedule label
-        sctitle_label = tk.Label(child_window, text="Dr Doctor Schedule",font=("Poppins Semibold", 28), 
-                                 fg='black', bg='white')
-        sctitle_label.place(x=90, y=18)
+        sctitle_label = tk.Label(child_window, text=f"Dr.{self.doctor_name.split()[0]} Schedule",
+                                 font=("Poppins Semibold", 24), 
+                                 fg='black', bg='white',wraplength=500)
+        sctitle_label.place(x=30, y=18)
 
         # scrollpane schedule
         frame1 = tk.Frame(child_window, bd=1, highlightthickness=1)
@@ -615,28 +632,41 @@ class AdminDoctorPage(tk.Frame):
         self.delete_photo = tk.PhotoImage(file='images/delete_icon.png')
         self.edit_photo = tk.PhotoImage(file='images/edit_icon.png')
 
-        for i in range(20):
+        for i, entry in enumerate(self.schedule):
+            schedule_text, schedule_id = entry
+            day_abbrev, time_range = schedule_text.split(": ", 1)
+            days_full = {
+                "Mon": "Monday",
+                "Tue": "Tuesday",
+                "Wed": "Wednesday",
+                "Thu": "Thursday",
+                "Fri": "Friday",
+                "Sat": "Saturday",
+                "Sun": "Sunday"
+            }
+            day_full = days_full.get(day_abbrev, "Unknown Day")
+
             # row container 
             row_frame = tk.Frame(content1, bg='white')
             row_frame.pack(fill='x', pady=(0, 10))
 
             # name label
-            name_label = tk.Label(row_frame, text=f"Day {i+1}", font=("Poppins Medium", 16), 
+            name_label = tk.Label(row_frame, text=day_full, font=("Poppins Medium", 16), 
                                 fg=self.master.font_color2, bg='white', anchor="w")
             name_label.grid(row=0, column=0, padx=(5, 10), sticky="w")
 
             # edit button
             edit_button = tk.Button(row_frame, image=self.edit_photo, 
-                                   command=lambda i=i: print(f'edit sc {i+1}'))
+                                   command=lambda schedule_id=schedule_id, child_window=child_window: self.edit_schedule(schedule_id, child_window))
             edit_button.grid(row=0, column=1, padx=(0, 5), sticky="e")
 
             # delete button            
             delete_button = tk.Button(row_frame, image=self.delete_photo, 
-                                    command=lambda i=i: print(f'delete sc {i+1}'))
+                                    command=lambda schedule_id=schedule_id, child_window=child_window: self.delete_schedule(schedule_id, child_window))
             delete_button.grid(row=0, column=2, padx=(0, 5), sticky="e")
 
             # desc label
-            desc_label = tk.Label(row_frame, text="This is a wrapped label. The text will wrap if it exceeds the specified width.",
+            desc_label = tk.Label(row_frame, text=time_range,
                                 font=("Poppins", 12), fg=self.master.font_color2, bg='white', 
                                 wraplength=450, justify="left", anchor="w")
             desc_label.grid(row=1, column=0, columnspan=3, sticky="w",padx=(5, 10), pady=(0, 10))
@@ -649,7 +679,7 @@ class AdminDoctorPage(tk.Frame):
         # add btn
         self.add_photo = tk.PhotoImage(file='images/add_icon.png')
         add_button = tk.Button(child_window, image=self.add_photo, 
-                                command=lambda: print(f'add sc'))
+                                command=self.add_schedule)
         add_button.place(x=475, y=100)
 
         # ok btn
@@ -658,6 +688,183 @@ class AdminDoctorPage(tk.Frame):
         ok_button.place(x=206, y=615, width=116, height=40)
 
         child_window.resizable(False, False)
+
+    def add_schedule(self):
+        add_window = tk.Toplevel(self)
+        add_window.title("Add New Schedule")
+        add_window.geometry("500x400")
+        add_window.configure(bg="white")
+
+        tk.Label(add_window, text="Day of the Week:", font=("Poppins", 14), bg="white").pack(pady=(20, 5))
+        day_entry = ttk.Combobox(add_window, values=["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"], 
+                                font=("Poppins", 12), state="readonly", width=28)
+        day_entry.pack(pady=5)
+
+        tk.Label(add_window, text="Start Time (HH:MM):", font=("Poppins", 14), bg="white").pack(pady=(20, 5))
+        start_time_entry = tk.Entry(add_window, font=("Poppins", 12), width=30, bd=2, relief="solid")
+        start_time_entry.pack(pady=5)
+
+        tk.Label(add_window, text="End Time (HH:MM):", font=("Poppins", 14), bg="white").pack(pady=(20, 5))
+        end_time_entry = tk.Entry(add_window, font=("Poppins", 12), width=30, bd=2, relief="solid")
+        end_time_entry.pack(pady=5)
+
+        def save_schedule():
+            day = day_entry.get().strip()
+            start_time = start_time_entry.get().strip()
+            end_time = end_time_entry.get().strip()
+
+            if not day or not start_time or not end_time:
+                messagebox.showerror("Error", "All fields are required!")
+                add_window.destroy()
+                return
+            if not self.is_valid_time(start_time) or not self.is_valid_time(end_time):
+                messagebox.showerror("Error", "Invalid time format! Use HH:MM format.")
+                add_window.destroy()
+                return
+
+            try:
+                conn = connect_to_db()
+                with conn.cursor() as cursor:
+                    cursor.execute("SELECT ScheduleId FROM DoctorSchedule ORDER BY ScheduleId DESC LIMIT 1")
+                    last_id = cursor.fetchone()
+
+                    if last_id:
+                        last = last_id[0]  
+                        numeric_part = int(last[3:])  
+                        new_numeric_part = numeric_part + 1
+                    else:
+                        new_numeric_part = 1
+                    
+                    new_id = f"SCH{str(new_numeric_part).zfill(7)}"
+
+                    query = """
+                        INSERT INTO DoctorSchedule (ScheduleId, DoctorId, DayOfWeek, StartHour, EndHour)
+                        VALUES (%s, %s, %s, %s, %s)
+                    """
+                    cursor.execute(query, (new_id,self.doctor_id, day, start_time, end_time))
+                    conn.commit()
+                    messagebox.showinfo("Success", "New schedule added successfully!")
+            except Exception as e:
+                messagebox.showerror("Error", f"Failed to add schedule: {e}")
+            finally:
+                if conn:
+                    conn.close()
+                add_window.destroy()
+                self.schedule = self.get_doctor_schedule(self.doctor_id)
+                self.open_schedule()  
+                self.update_schedule_panel() 
+
+        save_button = tk.Button(add_window, text="Save", font=("Poppins", 14), bg=self.master.bg_color1, fg="white", command=save_schedule)
+        save_button.pack(pady=(20, 10), ipadx=10, ipady=2)
+
+    def edit_schedule(self, schedule_id, schedule_window):
+        edit_window = tk.Toplevel(self)
+        edit_window.title("Edit Schedule")
+        edit_window.geometry("500x400")
+        edit_window.configure(bg="white")
+
+        try:
+            conn = connect_to_db()
+            with conn.cursor() as cursor:
+                query = """
+                    SELECT DayOfWeek, TIME_FORMAT(StartHour, '%H:%i'), TIME_FORMAT(EndHour, '%H:%i')
+                    FROM DoctorSchedule
+                    WHERE ScheduleId = %s
+                """
+                cursor.execute(query, (schedule_id,))
+                schedule = cursor.fetchone()
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to fetch schedule: {e}")
+            return
+        finally:
+            if conn:
+                conn.close()
+
+        if not schedule:
+            messagebox.showerror("Error", "Schedule not found!")
+            return
+
+        current_day, current_start, current_end = schedule
+
+        tk.Label(edit_window, text="Day of the Week:", font=("Poppins", 14), bg="white").pack(pady=(20, 5))
+        day_entry = ttk.Combobox(edit_window, values=["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"], 
+                                font=("Poppins", 12), state="readonly", width=28)
+        day_entry.pack(pady=5)
+        day_entry.set(current_day)
+
+        tk.Label(edit_window, text="Start Time (HH:MM):", font=("Poppins", 14), bg="white").pack(pady=(20, 5))
+        start_time_entry = tk.Entry(edit_window, font=("Poppins", 12), width=30, bd=2, relief="solid")
+        start_time_entry.pack(pady=5)
+        start_time_entry.insert(0, current_start)
+
+        tk.Label(edit_window, text="End Time (HH:MM):", font=("Poppins", 14), bg="white").pack(pady=(20, 5))
+        end_time_entry = tk.Entry(edit_window, font=("Poppins", 12), width=30, bd=2, relief="solid")
+        end_time_entry.pack(pady=5)
+        end_time_entry.insert(0, current_end)
+
+        def save_changes():
+            new_day = day_entry.get().strip()
+            new_start_time = start_time_entry.get().strip()
+            new_end_time = end_time_entry.get().strip()
+
+            if not new_day or not new_start_time or not new_end_time:
+                messagebox.showerror("Error", "All fields are required!")
+                edit_window.destroy()
+                return
+            if not self.is_valid_time(new_start_time) or not self.is_valid_time(new_end_time):
+                messagebox.showerror("Error", "Invalid time format! Use HH:MM format.")
+                edit_window.destroy()
+                return
+
+            try:
+                conn = connect_to_db()
+                with conn.cursor() as cursor:
+                    query = """
+                        UPDATE DoctorSchedule
+                        SET DayOfWeek = %s, StartHour = %s, EndHour = %s
+                        WHERE ScheduleId = %s
+                    """
+                    cursor.execute(query, (new_day, new_start_time, new_end_time, schedule_id))
+                    conn.commit()
+                    messagebox.showinfo("Success", "Schedule updated successfully!")
+            except Exception as e:
+                messagebox.showerror("Error", f"Failed to update schedule: {e}")
+            finally:
+                if conn:
+                    conn.close()
+                    
+                edit_window.destroy()
+                schedule_window.destroy()  
+                self.schedule = self.get_doctor_schedule(self.doctor_id)
+                self.open_schedule()  
+                self.update_schedule_panel() 
+
+        save_button = tk.Button(edit_window, text="Save", font=("Poppins", 14), bg=self.master.bg_color1, fg="white", command=save_changes)
+        save_button.pack(pady=(20, 10), ipadx=10, ipady=2)
+
+    def delete_schedule(self, schedule_id, schedule_window):
+        try:
+            conn = connect_to_db()
+            with conn.cursor() as cursor:
+                confirm = messagebox.askyesno(
+                    "Confirm Delete",
+                    "Are you sure you want to delete this schedule?"
+                )
+                if confirm:
+                    query = "DELETE FROM DoctorSchedule WHERE ScheduleId = %s"
+                    cursor.execute(query, (schedule_id,))
+                    conn.commit()
+                    messagebox.showinfo("Success", "Schedule deleted successfully!")
+                    
+        except Exception as e:
+            messagebox.showerror("Error", f"An error occurred while deleting: {e}")
+        finally:
+            if conn:
+                conn.close()
+            schedule_window.destroy()  
+            self.schedule = self.get_doctor_schedule(self.doctor_id)
+            self.open_schedule() 
+            self.update_schedule_panel() 
 
 
     def on_mouse_wheel(self, event, canvas):
