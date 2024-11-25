@@ -33,13 +33,13 @@ CREATE TABLE Specialty(
 
 CREATE TABLE Doctor (
     DoctorId        VARCHAR(10)   	NOT NULL,
-    SpecialtyID     VARCHAR(10)   	NOT NULL,   
+    SpecialtyId     VARCHAR(10)   	NOT NULL,   
     ProfilePicture  VARCHAR(500), 
     `Description`   TEXT,
     BranchNo        INT   			NOT NULL,   
     PRIMARY KEY (DoctorId),
     FOREIGN KEY (DoctorId) REFERENCES `User`(UserId) ON DELETE CASCADE ON UPDATE CASCADE,
-    FOREIGN KEY (SpecialtyID) REFERENCES Specialty(SpecialtyID),
+    FOREIGN KEY (SpecialtyId) REFERENCES Specialty(SpecialtyId),
     FOREIGN KEY (BranchNo) REFERENCES ClinicBranch(BranchNo) 
 );
 
@@ -113,3 +113,6 @@ INNER JOIN
 INNER JOIN 
     `User` pu ON b.PatientId = pu.UserId;
 
+ALTER TABLE `User` ADD COLUMN IsDeleted BIT DEFAULT 0;
+ALTER TABLE Doctor ADD COLUMN IsDeleted BIT DEFAULT 0;
+ALTER TABLE Patient ADD COLUMN IsDeleted BIT DEFAULT 0;

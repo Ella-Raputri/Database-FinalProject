@@ -253,19 +253,19 @@ class RegisterPage(tk.Frame):
 
             # insert to user
             query = """INSERT INTO User (UserId, Email, Password, FirstName, LastName, Gender,
-                    PhoneNumber, RoleName, City, AddressDetail)
-                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"""
+                    PhoneNumber, RoleName, City, AddressDetail, IsDeleted)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"""
             cursor.execute(query, (new_patient_id, email, password, fname, lname, gender, phone_num, 
-                                   'Patient', city, address))
+                                   'Patient', city, address, 0))
             conn.commit()
 
             # insert to patient
-            patient_query = """INSERT INTO Patient (PatientID, DateOfBirth, ProfilePicture)
-                            VALUES (%s, %s, %s)"""
-            cursor.execute(patient_query, (new_patient_id, dob_date, None))
+            patient_query = """INSERT INTO Patient (PatientID, DateOfBirth, ProfilePicture, IsDeleted)
+                            VALUES (%s, %s, %s, %s)"""
+            cursor.execute(patient_query, (new_patient_id, dob_date, None, 0))
             conn.commit()
             messagebox.showinfo("Success", "Registration successful!")
-            self.master.show_frame(self.master.admin_dashboard)
+            self.master.show_frame(self.master.login_page)
 
         except mysql.connector.Error as err:
             messagebox.showerror("Error", f"Error inserting data: {err}")

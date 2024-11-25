@@ -1,7 +1,8 @@
 USE ClinicSystemDB;
 
 select * from user ;
-select * from User where UserId LIKE 'ADM%' order by UserID desc limit 10;
+select * from User where UserId LIKE 'PAT%' order by UserID desc limit 10;
+select * from patient;
 select * from admin;
 
 select count(DoctorId) from Doctor where BranchNo = 1;
@@ -89,11 +90,16 @@ ORDER BY FIELD(DayOfWeek, 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'
 USE ClinicSystemDB;
 
 SELECT * FROM Specialty;
-SELECT * FROM DoctorSchedule order by scheduleid desc;
-SELECT COUNT(DoctorId) FROM Doctor WHERE SpecialtyID = 'SP0000020';
+SELECT * FROM BranchBookings where DoctorId = 'DOC0000001';
+SELECT * FROM DoctorSchedule where DoctorId = 'DOC0000001' order by scheduleid desc;
+SELECT COUNT(DoctorId) FROM Doctor WHERE SpecialtyId = 'SP0000020';
         
-select * from doctor;
-select * from user;
+select * from doctor order by doctorid desc;
+select * from user where userid like "DOC%" order by userid desc;
 select * from booking order by appointmentdate desc;
 
-
+start transaction;
+DELETE FROM Booking WHERE DoctorId = 'DOC0000001';
+DELETE FROM Doctor WHERE DoctorId = 'DOC0000001';
+commit;
+rollback;

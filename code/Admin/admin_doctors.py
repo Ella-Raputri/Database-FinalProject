@@ -1,6 +1,9 @@
 import tkinter as tk
-from tkinter import messagebox
-from tkinter import ttk
+from tkinter import messagebox,ttk, filedialog
+from PIL import Image, ImageTk
+import os
+import re
+import shutil
 from connection import connect_to_db
 
 class AdminDoctorPage(tk.Frame):
@@ -16,7 +19,10 @@ class AdminDoctorPage(tk.Frame):
         self.specialty_data = None
         self.doctor_id = None
         self.doctor_name = None
-    
+
+        self.show_pass_img = tk.PhotoImage(file='images/show_pass.png')
+        self.hide_pass_img = tk.PhotoImage(file='images/hide_pass.png')
+
     def set_user_id(self, user_id):
         self.user_id = user_id
         self.create_widgets()
@@ -173,21 +179,598 @@ class AdminDoctorPage(tk.Frame):
         self.scview_more_btn.place(x=30, y=120, width=110, height=32)
 
         # add btn
-        add_btn = tk.Button(self, text='Add', bg='white',
-                                     fg=self.master.green_font, font=('Poppins Medium', 14), bd=0)
+        add_btn = tk.Button(self, text='Add', bg='white', fg=self.master.green_font, 
+                            font=('Poppins Medium', 14), bd=0, command=self.add_doctor)
         add_btn.place(x=1180, y=590, width=135, height=35)
 
         # edit btn
-        edit_btn = tk.Button(self, text='Edit', bg='white',
-                                     fg=self.master.yellow_font, font=('Poppins Medium', 14), bd=0)
+        edit_btn = tk.Button(self, text='Edit', bg='white', fg=self.master.yellow_font, 
+                             font=('Poppins Medium', 14), bd=0, command=self.edit_doctor)
         edit_btn.place(x=1180, y=641, width=135, height=35)
 
         # delete btn
-        delete_btn = tk.Button(self, text='Delete', bg='white',
-                                     fg=self.master.red_font, font=('Poppins Medium', 14), bd=0)
+        delete_btn = tk.Button(self, text='Delete', bg='white', fg=self.master.red_font, 
+                               font=('Poppins Medium', 14), bd=0, command=self.delete_doctor)
         delete_btn.place(x=1180, y=692, width=135, height=35)
 
         self.create_table()
+
+    def populate_specialty_combobox(self):
+        try:
+            conn = connect_to_db() 
+            cursor = conn.cursor()
+            cursor.execute("SELECT SpecialtyId, SpecialtyName FROM Specialty")
+            specialties = cursor.fetchall()
+
+            specialty_names = [specialty[1] for specialty in specialties]
+            self.specialty_combobox['values'] = specialty_names
+            self.specialty_id_map = {specialty[1]: specialty[0] for specialty in specialties}
+
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to fetch specialties: {e}")
+        finally:
+            if conn:
+                conn.close()
+
+    def edit_doctor(self):
+        def show_hide_password():
+            if self.password_entry['show'] == '*':
+                self.password_entry.config(show='')
+                show_hide_btn.config(image=self.hide_pass_img)
+            else:
+                self.password_entry.config(show='*')
+                show_hide_btn.config(image=self.show_pass_img)
+        
+        def show_hide_confirm_password():
+            if self.confirm_password_entry['show'] == '*':
+                self.confirm_password_entry.config(show='')
+                confirm_show_hide_btn.config(image=self.hide_pass_img)
+            else:
+                self.confirm_password_entry.config(show='*')
+                confirm_show_hide_btn.config(image=self.show_pass_img)
+
+        def upload_profile_picture():
+            file_path = filedialog.askopenfilename(
+                title="Select Profile Picture",
+                filetypes=[("Image Files", "*.png;*.jpg;*.jpeg")]
+            )
+            if file_path:
+                save_dir = "profile_pictures"
+                if not os.path.exists(save_dir):
+                    os.makedirs(save_dir)
+                
+                file_name = os.path.basename(file_path)
+                save_path = os.path.join(save_dir, file_name)
+                shutil.copy(file_path, save_path)
+                self.uploaded_file_path = save_path  
+
+                img = Image.open(save_path)
+                img = img.resize((100, 100), Image.Resampling.LANCZOS)  
+                self.profile_pic_img = ImageTk.PhotoImage(img)
+                self.pict_label.config(image=self.profile_pic_img)
+                self.pict_label.image = self.profile_pic_img
+
+                messagebox.showinfo("Success", f"Profile picture uploaded successfully to {save_path}")
+            else:
+                self.uploaded_file_path = None
+
+        conn = connect_to_db()
+        cursor = conn.cursor()
+        # UserId, 
+        query = """
+            SELECT 
+                u.Email, u.Password, u.FirstName, u.LastName, u.Gender, u.PhoneNumber, u.City, u.AddressDetail,
+                d.SpecialtyId, d.ProfilePicture, d.Description
+            FROM User u JOIN Doctor d ON u.UserId = d.DoctorId WHERE u.UserId = %s
+        """
+        cursor.execute(query, (self.doctor_id,))
+        doctor_data = cursor.fetchone()
+        conn.close()
+
+        if not doctor_data:
+            messagebox.showerror("Error", "Doctor not found!")
+            return
+
+        email, password, first_name, last_name, gender, phone, city, address, \
+        spid, profile_picture_path, description = (
+            doctor_data[0], doctor_data[1], doctor_data[2], doctor_data[3], doctor_data[4],
+            doctor_data[5], doctor_data[6], doctor_data[7], doctor_data[8],
+            doctor_data[9], doctor_data[10]
+        )
+
+        # Gender mapping
+        gender_str = "Male" if gender == 0 else "Female"
+
+        edit_window = tk.Toplevel(self)
+        edit_window.title("Add New Doctor")
+        edit_window.geometry("1011x699")
+        edit_window.configure(bg="white")
+
+        # Title
+        title_label = tk.Label(edit_window, text="Add Doctor", font=("Poppins", 32, "bold"), fg=self.master.font_color1, bg='white')
+        title_label.place(x=31, y=16)
+
+        # Email
+        email_label = tk.Label(edit_window, text="Email", font=("Poppins Semibold", 16), fg=self.master.font_color1, bg='white')
+        email_label.place(x=31, y=103)
+        self.email_entry = tk.Entry(edit_window, font=('Poppins', 14), width=28, bd=1, relief="solid", bg='white')
+        self.email_entry.insert(0, email)
+        self.email_entry.place(x=31, y=144)
+
+        # First Name
+        fname_label = tk.Label(edit_window, text="First Name", font=("Poppins Semibold", 16), fg=self.master.font_color1, bg='white')
+        fname_label.place(x=390, y=103)
+        self.fname_entry = tk.Entry(edit_window, font=('Poppins', 14), width=22, bd=1, relief="solid", bg='white')
+        self.fname_entry.insert(0, first_name)
+        self.fname_entry.place(x=390, y=144)
+
+        # Last Name
+        lname_label = tk.Label(edit_window, text="Last Name", font=("Poppins Semibold", 16), fg=self.master.font_color1, bg='white')
+        lname_label.place(x=675, y=103)
+        self.lname_entry = tk.Entry(edit_window, font=('Poppins', 14), width=24, bd=1, relief="solid", bg='white')
+        self.lname_entry.insert(0, last_name)
+        self.lname_entry.place(x=675, y=144)
+        
+        # Password
+        password_label = tk.Label(edit_window, text="Password",font=("Poppins Semibold", 16), 
+                               fg=self.master.font_color1, bg='white')
+        password_label.place(x=31, y=230)
+
+        self.password_entry = tk.Entry(edit_window, font=('Poppins',14), width=28,
+                        highlightcolor=self.master.font_color1,
+                        highlightbackground='grey',highlightthickness=1,
+                        bd=1, bg='white', show='*')
+        self.password_entry.insert(0, password)
+        self.password_entry.place(x=31, y=272)
+
+        show_hide_btn = tk.Button(edit_window, image=self.show_pass_img, 
+                            bd=0, command=show_hide_password, bg='white')
+        show_hide_btn.place(x=322, y=282)
+
+        # Phone Number
+        phone_label = tk.Label(edit_window, text="Phone Number", font=("Poppins Semibold", 16), fg=self.master.font_color1, bg='white')
+        phone_label.place(x=390, y=228)
+        self.phone_entry = tk.Entry(edit_window, font=('Poppins', 14), width=27, bd=1, relief="solid", bg='white')
+        self.phone_entry.insert(0, phone)
+        self.phone_entry.place(x=390, y=271)
+
+        # Specialty
+        specialty_label = tk.Label(edit_window, text="Specialty", font=("Poppins Semibold",16), fg=self.master.font_color1, bg='white')
+        specialty_label.place(x=735, y=228)
+        style = ttk.Style()
+        style.configure("Custom.TCombobox", font=("Poppins", 14))
+        self.specialty_combobox = ttk.Combobox(edit_window, font=('Poppins', 14), width=18, state="readonly", style="Custom.TCombobox")
+        self.populate_specialty_combobox()
+        self.specialty_combobox.place(x=735, y=271)
+
+        spname = "Select"
+        for name, id_ in self.specialty_id_map.items():
+            if id_ == spid:
+                spname = name
+                break
+        self.specialty_combobox.set(spname)
+
+        # Confirm Password
+        confirm_password_label = tk.Label(edit_window, text="Confirm Password",font=("Poppins Semibold", 16), 
+                               fg=self.master.font_color1, bg='white')
+        confirm_password_label.place(x=31, y=365)
+
+        self.confirm_password_entry = tk.Entry(edit_window, font=('Poppins',14), width=28,
+                        highlightcolor=self.master.font_color1,
+                        highlightbackground='grey',highlightthickness=1,
+                        bd=1, bg='white', show='*')
+        self.confirm_password_entry.insert(0, password)
+        self.confirm_password_entry.place(x=31, y=403)
+
+        confirm_show_hide_btn = tk.Button(edit_window, image=self.show_pass_img, 
+                            bd=0, command=show_hide_confirm_password, bg='white')
+        confirm_show_hide_btn.place(x=322, y=415)
+
+        # City
+        city_label = tk.Label(edit_window, text="City", font=("Poppins Semibold", 16), fg=self.master.font_color1, bg='white')
+        city_label.place(x=390, y=365)
+        self.city_entry = tk.Entry(edit_window, font=('Poppins', 14), width=13, bd=1, relief="solid", bg='white')
+        self.city_entry.insert(0, city)
+        self.city_entry.place(x=390, y=403)
+
+        # Gender
+        gender_label = tk.Label(edit_window, text="Gender", font=("Poppins Semibold", 16), fg=self.master.font_color1, bg='white')
+        gender_label.place(x=572, y=365)
+        style = ttk.Style()
+        style.configure("Custom.TCombobox", font=("Poppins", 14))
+        self.gender_combobox = ttk.Combobox(edit_window, font=('Poppins', 14), width=8, state="readonly", style="Custom.TCombobox")
+        self.gender_combobox['values'] = ("Male", "Female")
+        self.gender_combobox.place(x=572, y=403)
+        self.gender_combobox.set(gender_str)    
+
+        # Profile
+        profile_label = tk.Label(edit_window, text="Profile Picture", font=("Poppins Semibold", 16), fg=self.master.font_color1, bg='white')
+        profile_label.place(x=715, y=365)
+
+        self.pict_label = tk.Label(edit_window, bg='white', width=100, height=100)
+        self.pict_label.place(x=890, y=365)
+
+        upload_button = tk.Button(
+            edit_window, text="Upload", font=("Poppins", 12), bg='grey', fg='white',
+            bd=0, command=upload_profile_picture
+        )
+        upload_button.place(x=715, y=403, width=130, height=43)
+
+        if profile_picture_path:
+            img = Image.open(profile_picture_path)
+            img = img.resize((100, 100), Image.Resampling.LANCZOS)
+            profile_pic_img = ImageTk.PhotoImage(img)
+            self.pict_label.config(image=profile_pic_img)
+            self.pict_label.image = profile_pic_img
+
+        # Address
+        address_label = tk.Label(edit_window, text="Address Details", font=("Poppins Semibold", 16), fg=self.master.font_color1, bg='white')
+        address_label.place(x=31, y=489)
+        self.address_entry = tk.Entry(edit_window, font=('Poppins', 14), width=36, bd=1, relief="solid", bg='white')
+        self.address_entry.insert(0, address)
+        self.address_entry.place(x=31, y=532)
+
+        # Description
+        desc_label = tk.Label(edit_window, text="Description", font=("Poppins Semibold", 16), fg=self.master.font_color1, bg='white')
+        desc_label.place(x=489, y=489)
+        self.desc_entry = tk.Entry(edit_window, font=('Poppins', 14), width=40, bd=1, relief="solid", bg='white')
+        self.desc_entry.insert(0, description)
+        self.desc_entry.place(x=489, y=532)
+
+        def update_doctor():
+            updated_email = self.email_entry.get().strip()
+            updated_first_name = self.fname_entry.get().strip()
+            updated_last_name = self.lname_entry.get().strip()
+            updated_password = self.password_entry.get().strip()
+            updated_conf_password = self.confirm_password_entry.get().strip()
+            updated_phone = self.phone_entry.get().strip()
+            updated_specialty_name = self.specialty_combobox.get().strip()
+            updated_specialty_id = self.specialty_id_map.get(updated_specialty_name)
+            updated_gender_val = self.gender_combobox.get().strip()
+            updated_city = self.city_entry.get().strip()
+            updated_address = self.address_entry.get().strip()
+            updated_description = self.desc_entry.get().strip()
+            updated_profile_picture_path = getattr(self, "uploaded_file_path", None)
+            updated_profile_picture_path = updated_profile_picture_path or ""
+
+            updated_gender = 0 if updated_gender_val == "Male" else 1
+
+            if not self.doctor_id:
+                messagebox.showerror("Error", "Please select a doctor first!")
+
+            if not updated_email or not updated_password or not updated_conf_password or not updated_first_name \
+                or not updated_last_name or not updated_phone or not updated_specialty_id or not updated_city \
+                or not updated_address or not updated_gender or not updated_description:
+                messagebox.showerror("Error", "All fields are required!")
+                return
+            if not re.match(r'^[\w\.-]+@[\w\.-]+\.\w+$', updated_email):
+                messagebox.showerror("Error", "Invalid email format!")
+                return
+            if updated_password != updated_conf_password:
+                messagebox.showerror("Error", "Please reconfirm your password!")
+                return
+            if not re.match(r'^\d+$', updated_phone):
+                messagebox.showerror("Error", "Invalid phone number format!")
+                return
+
+            try:
+                conn = connect_to_db()
+                cursor = conn.cursor()
+
+                # Update User table
+                query1 = """
+                    UPDATE User
+                    SET Email = %s, Password = %s, FirstName = %s, LastName = %s,
+                        Gender = %s, PhoneNumber = %s, City = %s, AddressDetail = %s
+                    WHERE UserId = %s
+                """
+                cursor.execute(query1, (updated_email, updated_password, updated_first_name, updated_last_name,
+                                        updated_gender, updated_phone, updated_city, updated_address, self.doctor_id))
+
+                # Update Doctor table
+                query2 = """
+                    UPDATE Doctor
+                    SET SpecialtyId = %s, ProfilePicture = %s, Description = %s
+                    WHERE DoctorId = %s
+                """
+                cursor.execute(query2, (updated_specialty_id, updated_profile_picture_path,
+                                        updated_description, self.doctor_id))
+
+                conn.commit()
+                messagebox.showinfo("Success", "Doctor updated successfully!")
+
+            except Exception as e:
+                messagebox.showerror("Error", f"Failed to update doctor: {e}")
+            finally:
+                if conn:
+                    conn.close()
+                self.create_table()
+                edit_window.destroy()
+
+        # Save Button
+        save_button = tk.Button(edit_window, text="Save", bg=self.master.bg_color1, 
+                                fg='white', font=("Poppins", 16), bd=0, command=update_doctor)
+        save_button.place(x=826, y=623, width=110, height=45)
+
+    def delete_doctor(self):
+        confirm = messagebox.askyesno(
+            "Confirm Delete",
+            f"Are you sure you want to delete the doctor '{self.doctor_id}'?"
+        )
+
+        if confirm:
+            try:
+                conn = connect_to_db()
+                if not conn:
+                    messagebox.showerror("Error", "Database connection failed.")
+                    return
+
+                with conn.cursor() as cursor:
+                    query = "UPDATE `User` SET IsDeleted = 1 WHERE UserId = %s;"
+                    cursor.execute(query, (self.doctor_id,))
+                    conn.commit()
+
+                    query = "UPDATE Doctor SET IsDeleted = 1 WHERE DoctorId = %s;"
+                    cursor.execute(query, (self.doctor_id,))
+                    conn.commit()
+
+                    query = """UPDATE Booking SET AppointmentStatus = 'Cancelled' WHERE DoctorId = %s 
+                        AND AppointmentStatus = 'Pending';"""
+                    cursor.execute(query, (self.doctor_id,))
+                    conn.commit()
+                                        
+                    messagebox.showinfo("Success", f"Doctor '{self.doctor_id}' has been deleted.") 
+
+            except Exception as e:
+                messagebox.showerror("Error", f"Failed to delete specialty: {e}")
+            finally:
+                if conn:
+                    conn.close()
+                self.create_table()
+
+    def add_doctor(self):   
+        def show_hide_password():
+            if self.password_entry['show'] == '*':
+                self.password_entry.config(show='')
+                show_hide_btn.config(image=self.hide_pass_img)
+            else:
+                self.password_entry.config(show='*')
+                show_hide_btn.config(image=self.show_pass_img)
+        
+        def show_hide_confirm_password():
+            if self.confirm_password_entry['show'] == '*':
+                self.confirm_password_entry.config(show='')
+                confirm_show_hide_btn.config(image=self.hide_pass_img)
+            else:
+                self.confirm_password_entry.config(show='*')
+                confirm_show_hide_btn.config(image=self.show_pass_img)
+
+        def upload_profile_picture():
+            file_path = filedialog.askopenfilename(
+                title="Select Profile Picture",
+                filetypes=[("Image Files", "*.png;*.jpg;*.jpeg")]
+            )
+            if file_path:
+                save_dir = "profile_pictures"
+                if not os.path.exists(save_dir):
+                    os.makedirs(save_dir)
+                
+                file_name = os.path.basename(file_path)
+                save_path = os.path.join(save_dir, file_name)
+                shutil.copy(file_path, save_path)
+                self.uploaded_file_path = save_path  
+
+                img = Image.open(save_path)
+                img = img.resize((100, 100), Image.Resampling.LANCZOS)  
+                self.profile_pic_img = ImageTk.PhotoImage(img)
+                self.pict_label.config(image=self.profile_pic_img)
+                self.pict_label.image = self.profile_pic_img
+
+                messagebox.showinfo("Success", f"Profile picture uploaded successfully to {save_path}")
+            else:
+                self.uploaded_file_path = None
+
+        add_window = tk.Toplevel(self)
+        add_window.title("Add New Doctor")
+        add_window.geometry("1011x699")
+        add_window.configure(bg="white")
+
+        # Title
+        title_label = tk.Label(add_window, text="Add Doctor", font=("Poppins", 32, "bold"), fg=self.master.font_color1, bg='white')
+        title_label.place(x=31, y=16)
+
+        # Email
+        email_label = tk.Label(add_window, text="Email", font=("Poppins Semibold", 16), fg=self.master.font_color1, bg='white')
+        email_label.place(x=31, y=103)
+        self.email_entry = tk.Entry(add_window, font=('Poppins', 14), width=28, bd=1, relief="solid", bg='white')
+        self.email_entry.place(x=31, y=144)
+
+        # First Name
+        fname_label = tk.Label(add_window, text="First Name", font=("Poppins Semibold", 16), fg=self.master.font_color1, bg='white')
+        fname_label.place(x=390, y=103)
+        self.fname_entry = tk.Entry(add_window, font=('Poppins', 14), width=22, bd=1, relief="solid", bg='white')
+        self.fname_entry.place(x=390, y=144)
+
+        # Last Name
+        lname_label = tk.Label(add_window, text="Last Name", font=("Poppins Semibold", 16), fg=self.master.font_color1, bg='white')
+        lname_label.place(x=675, y=103)
+        self.lname_entry = tk.Entry(add_window, font=('Poppins', 14), width=24, bd=1, relief="solid", bg='white')
+        self.lname_entry.place(x=675, y=144)
+        
+        # Password
+        password_label = tk.Label(add_window, text="Password",font=("Poppins Semibold", 16), 
+                               fg=self.master.font_color1, bg='white')
+        password_label.place(x=31, y=230)
+
+        self.password_entry = tk.Entry(add_window, font=('Poppins',14), width=28,
+                        highlightcolor=self.master.font_color1,
+                        highlightbackground='grey',highlightthickness=1,
+                        bd=1, bg='white', show='*')
+        self.password_entry.place(x=31, y=272)
+
+        show_hide_btn = tk.Button(add_window, image=self.show_pass_img, 
+                            bd=0, command=show_hide_password, bg='white')
+        show_hide_btn.place(x=322, y=282)
+
+        # Phone Number
+        phone_label = tk.Label(add_window, text="Phone Number", font=("Poppins Semibold", 16), fg=self.master.font_color1, bg='white')
+        phone_label.place(x=390, y=228)
+        self.phone_entry = tk.Entry(add_window, font=('Poppins', 14), width=27, bd=1, relief="solid", bg='white')
+        self.phone_entry.place(x=390, y=271)
+
+        # Specialty
+        specialty_label = tk.Label(add_window, text="Specialty", font=("Poppins Semibold",16), fg=self.master.font_color1, bg='white')
+        specialty_label.place(x=735, y=228)
+        style = ttk.Style()
+        style.configure("Custom.TCombobox", font=("Poppins", 14))
+        self.specialty_combobox = ttk.Combobox(add_window, font=('Poppins', 14), width=18, state="readonly", style="Custom.TCombobox")
+        self.populate_specialty_combobox()
+        self.specialty_combobox.place(x=735, y=271)
+        self.specialty_combobox.set("Select")
+
+        # Confirm Password
+        confirm_password_label = tk.Label(add_window, text="Confirm Password",font=("Poppins Semibold", 16), 
+                               fg=self.master.font_color1, bg='white')
+        confirm_password_label.place(x=31, y=365)
+
+        self.confirm_password_entry = tk.Entry(add_window, font=('Poppins',14), width=28,
+                        highlightcolor=self.master.font_color1,
+                        highlightbackground='grey',highlightthickness=1,
+                        bd=1, bg='white', show='*')
+        self.confirm_password_entry.place(x=31, y=403)
+
+        confirm_show_hide_btn = tk.Button(add_window, image=self.show_pass_img, 
+                            bd=0, command=show_hide_confirm_password, bg='white')
+        confirm_show_hide_btn.place(x=322, y=415)
+
+        # City
+        city_label = tk.Label(add_window, text="City", font=("Poppins Semibold", 16), fg=self.master.font_color1, bg='white')
+        city_label.place(x=390, y=365)
+        self.city_entry = tk.Entry(add_window, font=('Poppins', 14), width=13, bd=1, relief="solid", bg='white')
+        self.city_entry.place(x=390, y=403)
+
+        # Gender
+        gender_label = tk.Label(add_window, text="Gender", font=("Poppins Semibold", 16), fg=self.master.font_color1, bg='white')
+        gender_label.place(x=572, y=365)
+        style = ttk.Style()
+        style.configure("Custom.TCombobox", font=("Poppins", 14))
+        self.gender_combobox = ttk.Combobox(add_window, font=('Poppins', 14), width=8, state="readonly", style="Custom.TCombobox")
+        self.gender_combobox['values'] = ("Male", "Female")
+        self.gender_combobox.place(x=572, y=403)
+        self.gender_combobox.set("Select")    
+
+        # Profile
+        profile_label = tk.Label(add_window, text="Profile Picture", font=("Poppins Semibold", 16), fg=self.master.font_color1, bg='white')
+        profile_label.place(x=715, y=365)
+
+        self.pict_label = tk.Label(add_window, bg='white', width=100, height=100)
+        self.pict_label.place(x=890, y=365)
+
+        upload_button = tk.Button(
+            add_window, text="Upload", font=("Poppins", 12), bg='grey', fg='white',
+            bd=0, command=upload_profile_picture
+        )
+        upload_button.place(x=715, y=403, width=130, height=43)
+
+        # Address
+        address_label = tk.Label(add_window, text="Address Details", font=("Poppins Semibold", 16), fg=self.master.font_color1, bg='white')
+        address_label.place(x=31, y=489)
+        self.address_entry = tk.Entry(add_window, font=('Poppins', 14), width=36, bd=1, relief="solid", bg='white')
+        self.address_entry.place(x=31, y=532)
+
+        # Description
+        desc_label = tk.Label(add_window, text="Description", font=("Poppins Semibold", 16), fg=self.master.font_color1, bg='white')
+        desc_label.place(x=489, y=489)
+        self.desc_entry = tk.Entry(add_window, font=('Poppins', 14), width=40, bd=1, relief="solid", bg='white')
+        self.desc_entry.place(x=489, y=532)
+
+        # Save Button
+        def save_doctor():
+            email = self.email_entry.get().strip()
+            first_name = self.fname_entry.get().strip()
+            last_name = self.lname_entry.get().strip()
+            
+            password = self.password_entry.get().strip()
+            phone = self.phone_entry.get().strip()
+            specialty_name = self.specialty_combobox.get().strip()
+            specialty_id = self.specialty_id_map.get(specialty_name)
+
+            conf_password = self.confirm_password_entry.get().strip()
+            gender_val = self.gender_combobox.get().strip()
+            city = self.city_entry.get().strip()
+            profile_picture_path = getattr(self, "uploaded_file_path", None)
+            profile_picture_path = profile_picture_path or ""
+
+            address = self.address_entry.get().strip()
+            description = self.desc_entry.get().strip()
+
+            if gender_val == 'Male': gender = 0
+            elif gender_val == 'Female': gender = 1
+            else: 
+                messagebox.showerror("Error", "Invalid gender!")
+                return
+
+            if not email or not password or not conf_password or not first_name \
+                or not last_name or not phone or not specialty_id or not city or not address \
+                or gender is None or not description:
+                messagebox.showerror("Error", "All fields are required!")
+                return
+            if not re.match(r'^[\w\.-]+@[\w\.-]+\.\w+$', email):
+                messagebox.showerror("Error", "Invalid email format!")
+                return
+            if password != conf_password:
+                messagebox.showerror("Error", "Please reconfirm your password!")
+                return
+            if not re.match(r'^\d+$', phone):
+                messagebox.showerror("Error", "Invalid phone number format!")
+                return
+
+            try:
+                conn = connect_to_db()
+                cursor = conn.cursor()
+
+                cursor.execute("SELECT DoctorId FROM Doctor ORDER BY DoctorId DESC LIMIT 1")
+                last_doctor_id = cursor.fetchone()
+                if last_doctor_id:
+                    last_id = last_doctor_id[0]
+                    numeric_part = int(last_id[3:])  
+                    new_numeric_part = numeric_part + 1
+                else:
+                    new_numeric_part = 1
+
+                new_doctor_id = f'DOC{str(new_numeric_part).zfill(7)}'
+
+                query1 = """
+                    INSERT INTO User (UserId, Email, Password, FirstName, LastName, 
+                    Gender, PhoneNumber, RoleName, City, AddressDetail, IsDeleted)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                """
+                cursor.execute(query1, (new_doctor_id, email, password, first_name, last_name,
+                                        gender, phone, "Doctor", city, address, 0))
+                conn.commit()
+
+                query2 = """
+                    INSERT INTO Doctor (DoctorId, SpecialtyId, ProfilePicture,  
+                    Description, BranchNo, IsDeleted)
+                    VALUES (%s, %s, %s, %s, %s, %s)
+                """
+                cursor.execute(query2, (new_doctor_id, specialty_id, profile_picture_path,
+                                        description, self.branch_no, 0))
+                conn.commit()
+
+                messagebox.showinfo("Success", "Doctor added successfully!")
+
+            except Exception as e:
+                print(f"Error occurred: {e}")
+                messagebox.showerror("Error", f"Failed to add doctor: {e}")
+            finally:
+                if conn:
+                    conn.close()
+                self.create_table()
+                add_window.destroy()
+
+        save_button = tk.Button(add_window, text="Save", bg=self.master.bg_color1, fg='white', font=("Poppins", 16), bd=0, command=save_doctor)
+        save_button.place(x=826, y=623, width=110, height=45)
 
     def get_specialty_list(self):
         try:
@@ -238,7 +821,7 @@ class AdminDoctorPage(tk.Frame):
                         `User` u ON d.DoctorId = u.UserId
                     LEFT JOIN 
                         Booking b ON d.DoctorId = b.DoctorId
-                    WHERE d.BranchNo = %s
+                    WHERE d.BranchNo = %s AND d.IsDeleted = 0
                     GROUP BY 
                         d.DoctorId, s.SpecialtyName, u.Email, u.FirstName, u.LastName,
                         u.Gender, u.PhoneNumber, u.City, u.AddressDetail
@@ -256,7 +839,7 @@ class AdminDoctorPage(tk.Frame):
                 conn.close()
     
     def create_table(self):
-        data = self.get_table_data()
+        self.data = self.get_table_data()
         style = ttk.Style()
         style.configure("Treeview.Heading", font=("Poppins Semibold", 14))
         style.configure("Treeview", rowheight=40, font=("Poppins", 12))
@@ -272,7 +855,7 @@ class AdminDoctorPage(tk.Frame):
             self.table.heading(col, text=col)
             self.table.column(col, width=200, anchor=tk.CENTER)
 
-        for i, row in enumerate(data):
+        for i, row in enumerate(self.data):
             tags = "odd_row" if i % 2 == 0 else "even_row"
             self.table.insert("", tk.END, values=row, tags=(tags,))
         
@@ -865,7 +1448,6 @@ class AdminDoctorPage(tk.Frame):
             self.schedule = self.get_doctor_schedule(self.doctor_id)
             self.open_schedule() 
             self.update_schedule_panel() 
-
 
     def on_mouse_wheel(self, event, canvas):
         if event.delta > 0:  # Scroll up
