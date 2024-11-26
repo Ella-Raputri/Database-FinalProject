@@ -78,16 +78,52 @@ GROUP BY
 ORDER BY 
     d.DoctorId;
 
-
 SELECT 
-	CONCAT(DayOfWeek, ': ', 
-	TIME_FORMAT(StartHour, '%H:%i'), '-', 
-	TIME_FORMAT(EndHour, '%H:%i')) AS Schedule
-FROM DoctorSchedule
-WHERE DoctorId = 'DOC0000002'
-ORDER BY FIELD(DayOfWeek, 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday');
+    p.PatientId,
+    p.DateOfBirth,
+    u.Email,
+    CONCAT(u.FirstName, ' ', u.LastName) AS Name,
+    CASE u.Gender 
+        WHEN 0 THEN 'Male'
+        ELSE 'Female'
+    END AS Gender,
+    u.PhoneNumber,
+    u.City,
+    u.AddressDetail AS Address,
+    COUNT(b.BookingId) AS TotalBookings
+FROM 
+    Patient p
+LEFT JOIN 
+    `User` u ON p.PatientId = u.UserId
+LEFT JOIN 
+    Booking b ON p.PatientId = b.PatientId
+INNER JOIN 
+    Doctor d ON b.DoctorId = d.DoctorId  -- Join Doctor table to get BranchNo
+WHERE 
+    d.IsDeleted = 0
+    AND d.BranchNo = 1  -- Filter by BranchNo
+GROUP BY 
+    p.PatientId, u.Email, u.FirstName, u.LastName,
+    u.Gender, u.PhoneNumber, u.City, u.AddressDetail
+ORDER BY 
+    p.PatientId;
 
 USE ClinicSystemDB;
+select * from medicalhistory where patientid = 'PAT0000001' ;
+SELECT 
+CONCAT(DiseaseName, ': ', 
+CASE Status 
+	WHEN 0 THEN 'Ongoing'
+	ELSE 'Recovered'
+END
+) AS MedHistory,
+PatientId
+FROM MedicalHistory
+WHERE PatientId = 'PAT0000001'
+ORDER BY Status ASC;
+
+select * from user order by userid desc;
+select * from patient order by patientid desc;
 
 SELECT * FROM Specialty;
 SELECT * FROM BranchBookings where DoctorId = 'DOC0000001';

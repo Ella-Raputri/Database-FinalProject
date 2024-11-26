@@ -21,6 +21,7 @@ CREATE TABLE `User`(
     RoleName			VARCHAR(50)			NOT NULL,
     City				VARCHAR(50)			NOT NULL,
     AddressDetail		TEXT		 		NOT NULL,
+    IsDeleted           BIT                 DEFAULT 0,
     PRIMARY KEY (UserId)
 );
 
@@ -36,7 +37,8 @@ CREATE TABLE Doctor (
     SpecialtyId     VARCHAR(10)   	NOT NULL,   
     ProfilePicture  VARCHAR(500), 
     `Description`   TEXT,
-    BranchNo        INT   			NOT NULL,   
+    BranchNo        INT   			NOT NULL,  
+    IsDeleted       BIT             DEFAULT 0,
     PRIMARY KEY (DoctorId),
     FOREIGN KEY (DoctorId) REFERENCES `User`(UserId) ON DELETE CASCADE ON UPDATE CASCADE,
     FOREIGN KEY (SpecialtyId) REFERENCES Specialty(SpecialtyId),
@@ -57,6 +59,7 @@ CREATE TABLE Patient (
     PatientId       VARCHAR(10)   	NOT NULL,
     DateOfBirth     DATE   			NOT NULL,   
     ProfilePicture  VARCHAR(500), 
+    IsDeleted       BIT             DEFAULT 0,
     PRIMARY KEY (PatientId),
     FOREIGN KEY (PatientId) REFERENCES `User`(UserId) ON DELETE CASCADE ON UPDATE CASCADE
 );
@@ -72,6 +75,7 @@ CREATE TABLE MedicalHistory (
 CREATE TABLE `Admin` (
     AdminId       	VARCHAR(10)   	NOT NULL,
     BranchNo        INT   			NOT NULL, 
+    IsDeleted       BIT             DEFAULT 0,
     PRIMARY KEY (AdminId),
     FOREIGN KEY (AdminId) REFERENCES `User`(UserId) ON DELETE CASCADE ON UPDATE CASCADE,
 	FOREIGN KEY (BranchNo) REFERENCES ClinicBranch(BranchNo) 
@@ -113,6 +117,6 @@ INNER JOIN
 INNER JOIN 
     `User` pu ON b.PatientId = pu.UserId;
 
-ALTER TABLE `User` ADD COLUMN IsDeleted BIT DEFAULT 0;
-ALTER TABLE Doctor ADD COLUMN IsDeleted BIT DEFAULT 0;
-ALTER TABLE Patient ADD COLUMN IsDeleted BIT DEFAULT 0;
+-- ALTER TABLE `User` ADD COLUMN IsDeleted BIT DEFAULT 0;
+-- ALTER TABLE Doctor ADD COLUMN IsDeleted BIT DEFAULT 0;
+-- ALTER TABLE Patient ADD COLUMN IsDeleted BIT DEFAULT 0;

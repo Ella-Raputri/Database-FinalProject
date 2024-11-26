@@ -213,6 +213,10 @@ class AdminDoctorPage(tk.Frame):
                 conn.close()
 
     def edit_doctor(self):
+        if not self.doctor_id:
+            messagebox.showerror("Error", "Please select a doctor first!")
+            return
+        
         def show_hide_password():
             if self.password_entry['show'] == '*':
                 self.password_entry.config(show='')
@@ -493,6 +497,10 @@ class AdminDoctorPage(tk.Frame):
         save_button.place(x=826, y=623, width=110, height=45)
 
     def delete_doctor(self):
+        if not self.doctor_id:
+            messagebox.showerror("Error", "Please select a doctor first!")
+            return
+        
         confirm = messagebox.askyesno(
             "Confirm Delete",
             f"Are you sure you want to delete the doctor '{self.doctor_id}'?"
@@ -522,7 +530,7 @@ class AdminDoctorPage(tk.Frame):
                     messagebox.showinfo("Success", f"Doctor '{self.doctor_id}' has been deleted.") 
 
             except Exception as e:
-                messagebox.showerror("Error", f"Failed to delete specialty: {e}")
+                messagebox.showerror("Error", f"Failed to delete doctor: {e}")
             finally:
                 if conn:
                     conn.close()
