@@ -20,6 +20,9 @@ class AdminPatientPage(tk.Frame):
         self.show_pass_img = tk.PhotoImage(file='images/show_pass.png')
         self.hide_pass_img = tk.PhotoImage(file='images/hide_pass.png')
 
+        self.filter_field = 'p.PatientId'
+        self.sort_order = 'ASC'
+
     def set_user_id(self, user_id):
         self.user_id = user_id
         self.create_widgets()
@@ -122,19 +125,35 @@ class AdminPatientPage(tk.Frame):
         email_label.place(x=-10, y=39, relx=1.0, anchor='ne')
 
         # filter dropdown
-        def on_select():
+        def on_select(event):
             selected_option = combo.get()
-            print(f"Selected: {selected_option}")
+            if selected_option == 'PatientId': selected_option = 'p.PatientId'
+            elif selected_option == 'DOB': selected_option = 'p.DateOfBirth'
+            
+            self.filter_field = selected_option  
+            self.create_table()
 
-        options = ["Option 1", "Option 2", "Option 3", "Option 4"]
-        combo = ttk.Combobox(self, values=options, font=("Poppins", 16),state='readonly')
-        combo.set("Filter")  
-        combo.place(x=1220, y=112, width=114, height=42)
+        options = ["PatientId", "Name", "DOB", "TotalBookings"]
+        combo = ttk.Combobox(self, values=options, font=("Poppins", 12), state='readonly')
+        combo.set("Filter")
+        combo.place(x=1214, y=112, width=135, height=42)
         combo.bind("<<ComboboxSelected>>", on_select)
 
-        self.filter_img = tk.PhotoImage(file='images/filter_icon.png')
-        filter_icon = tk.Label(self, image=self.filter_img)  
-        filter_icon.place(x=1182, y=124) 
+        self.sort_img = tk.PhotoImage(file='images/sort_ascending.png')  
+        sort_icon = tk.Label(self, image=self.sort_img)
+        sort_icon.place(x=1182, y=124)
+
+        def toggle_sort():
+            if self.sort_order == 'ASC':
+                self.sort_order = 'DESC'
+                self.sort_img = tk.PhotoImage(file='images/sort_descending.png')
+            else:
+                self.sort_order = 'ASC'
+                self.sort_img = tk.PhotoImage(file='images/sort_ascending.png')
+            sort_icon.config(image=self.sort_img)
+            self.create_table() 
+
+        sort_icon.bind("<Button-1>", lambda e: toggle_sort()) 
 
         # medical panel
         self.medical_panel = tk.Frame(self, bg=self.master.disabled_color,bd=1,relief='groove')
@@ -705,12 +724,11 @@ class AdminPatientPage(tk.Frame):
                     conn.close()
                 self.create_table()
 
-
     def get_table_data(self):
         try:
             conn = connect_to_db()
             with conn.cursor() as cursor:  
-                query1 = """
+                query1 = f"""
                     SELECT 
                         p.PatientId,
                         p.DateOfBirth,
@@ -736,7 +754,7 @@ class AdminPatientPage(tk.Frame):
                         p.PatientId, u.Email, u.FirstName, u.LastName,
                         u.Gender, u.PhoneNumber, u.City, u.AddressDetail
                     ORDER BY 
-                        p.PatientId;                
+                        {self.filter_field} {self.sort_order};                
                 """
                 cursor.execute(query1)
                 result = cursor.fetchall()

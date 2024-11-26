@@ -125,6 +125,15 @@ ORDER BY Status ASC;
 select * from user order by userid desc;
 select * from patient order by patientid desc;
 
+select * from branchbookings where branchNo = 1 order by appointmentdate desc;
+SELECT 
+    BookingId, PatientName, DoctorName, AppointmentDate, AppointmentHour,
+    AppointmentStatus, CheckUpType, ReasonOfVisit
+FROM BranchBookings 
+WHERE BranchNo = 1
+ORDER BY AppointmentDate DESC, STR_TO_DATE(AppointmentHour, '%H:%i') DESC;
+
+
 SELECT * FROM Specialty;
 SELECT * FROM BranchBookings where DoctorId = 'DOC0000001';
 SELECT * FROM DoctorSchedule where DoctorId = 'DOC0000001' order by scheduleid desc;
