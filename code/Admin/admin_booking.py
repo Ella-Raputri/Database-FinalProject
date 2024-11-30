@@ -245,7 +245,7 @@ class AdminBookingPage(tk.Frame):
                 SELECT d.DoctorId AS Id,  CONCAT(u.FirstName, ' ', u.LastName, ' (', d.DoctorId, ')') AS Name 
                 FROM Doctor d
                 INNER JOIN User u ON u.UserId = d.DoctorId
-                WHERE d.BranchNo = %s AND d.IsDeleted = 0
+                WHERE d.BranchNo = %s AND u.IsDeleted = 0
                 ORDER BY Id ASC"""
             
             cursor.execute(query, (self.branch_no,))

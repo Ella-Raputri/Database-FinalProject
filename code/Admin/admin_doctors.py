@@ -537,10 +537,6 @@ class AdminDoctorPage(tk.Frame):
                     cursor.execute(query, (self.doctor_id,))
                     conn.commit()
 
-                    query = "UPDATE Doctor SET IsDeleted = 1 WHERE DoctorId = %s;"
-                    cursor.execute(query, (self.doctor_id,))
-                    conn.commit()
-
                     query = """UPDATE Booking SET AppointmentStatus = 'Cancelled' WHERE DoctorId = %s 
                         AND AppointmentStatus = 'Pending';"""
                     cursor.execute(query, (self.doctor_id,))
@@ -778,11 +774,11 @@ class AdminDoctorPage(tk.Frame):
 
                 query2 = """
                     INSERT INTO Doctor (DoctorId, SpecialtyId, ProfilePicture,  
-                    Description, BranchNo, IsDeleted)
-                    VALUES (%s, %s, %s, %s, %s, %s)
+                    Description, BranchNo)
+                    VALUES (%s, %s, %s, %s, %s)
                 """
                 cursor.execute(query2, (new_doctor_id, specialty_id, profile_picture_path,
-                                        description, self.branch_no, 0))
+                                        description, self.branch_no))
                 conn.commit()
 
                 messagebox.showinfo("Success", "Doctor added successfully!")
@@ -848,7 +844,7 @@ class AdminDoctorPage(tk.Frame):
                         `User` u ON d.DoctorId = u.UserId
                     LEFT JOIN 
                         Booking b ON d.DoctorId = b.DoctorId
-                    WHERE d.BranchNo = %s AND d.IsDeleted = 0
+                    WHERE d.BranchNo = %s AND u.IsDeleted = 0
                     GROUP BY 
                         d.DoctorId, s.SpecialtyName, u.Email, u.FirstName, u.LastName,
                         u.Gender, u.PhoneNumber, u.City, u.AddressDetail

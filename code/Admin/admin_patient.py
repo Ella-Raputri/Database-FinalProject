@@ -400,10 +400,10 @@ class AdminPatientPage(tk.Frame):
                 conn.commit()
 
                 query2 = """
-                    INSERT INTO Patient (PatientId, DateOfBirth, ProfilePicture, IsDeleted)
-                    VALUES (%s, %s, %s, %s)
+                    INSERT INTO Patient (PatientId, DateOfBirth, ProfilePicture)
+                    VALUES (%s, %s, %s)
                 """
-                cursor.execute(query2, (new_patient_id, dob_date, profile_picture_path, 0))
+                cursor.execute(query2, (new_patient_id, dob_date, profile_picture_path))
                 conn.commit()
 
                 messagebox.showinfo("Success", "Patient added successfully!")
@@ -706,10 +706,6 @@ class AdminPatientPage(tk.Frame):
                     cursor.execute(query, (self.patient_id,))
                     conn.commit()
 
-                    query = "UPDATE Patient SET IsDeleted = 1 WHERE PatientId = %s;"
-                    cursor.execute(query, (self.patient_id,))
-                    conn.commit()
-
                     query = """UPDATE Booking SET AppointmentStatus = 'Cancelled' WHERE PatientId = %s 
                         AND AppointmentStatus = 'Pending';"""
                     cursor.execute(query, (self.patient_id,))
@@ -749,7 +745,7 @@ class AdminPatientPage(tk.Frame):
                     LEFT JOIN 
                         Booking b ON p.PatientId = b.PatientId
                     WHERE 
-                        p.IsDeleted = 0 
+                        u.IsDeleted = 0 
                     GROUP BY 
                         p.PatientId, u.Email, u.FirstName, u.LastName,
                         u.Gender, u.PhoneNumber, u.City, u.AddressDetail

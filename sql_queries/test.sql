@@ -124,6 +124,8 @@ ORDER BY Status ASC;
 
 select * from user order by userid desc;
 select * from patient order by patientid desc;
+select * from doctor ;
+select * from admin;
 
 select * from branchbookings where branchNo = 1 order by appointmentdate desc;
 SELECT 
