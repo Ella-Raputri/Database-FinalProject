@@ -3,6 +3,7 @@ from Booking import Booking
 from Home import PatientHome
 from History import History
 from PIL import Image, ImageTk
+import mysql.connector
 
 
 class MainApp(tk.Tk):
@@ -23,21 +24,21 @@ class MainApp(tk.Tk):
 
 
         # Sidebar buttons (Labels with icons)
-        self.home_icon = Image.open("images/home_icon.png")  # Your home icon
-        self.home_icon = self.home_icon.resize((30, 30), Image.Resampling.LANCZOS)
+        self.home_icon = Image.open("images/home.png")  # Your home icon
+        self.home_icon = self.home_icon.resize((230, 50), Image.Resampling.LANCZOS)
         self.home_icon_photo = ImageTk.PhotoImage(self.home_icon)
 
         self.home_label = tk.Label(self, text="Home", image=self.home_icon_photo, compound="left",
-                                   fg="white", font=("Poppins Semibold", 18), bd=0)
-        self.home_label.place(x=40, y=40)
+                                   fg="white", font=("Poppins Semibold", 18), bd=0, padx=30, bg=self["bg"], cursor='hand2')
+        self.home_label.place(x=-30, y=120)
 
-        self.booking_icon = Image.open("images/booking_icon.png")  # Your booking icon
-        self.booking_icon = self.booking_icon.resize((30, 30), Image.Resampling.LANCZOS)
+        self.booking_icon = Image.open("images/booking (2).png")  # Your booking icon
+        self.booking_icon = self.booking_icon.resize((270, 60), Image.Resampling.LANCZOS)
         self.booking_icon_photo = ImageTk.PhotoImage(self.booking_icon)
 
-        self.booking_label = tk.Label(self, text="Booking", image=self.booking_icon_photo, compound="left",
-                                      fg="white", font=("Poppins Semibold", 18), bd=0)
-        self.booking_label.place(x=20, y=80)
+        self.booking_label = tk.Label(self, image=self.booking_icon_photo, compound="left",
+                                      fg="white", font=("Poppins Semibold", 18), bd=0, padx=30, bg=self["bg"], cursor='hand2')
+        self.booking_label.place(x=-25, y=180)
 
         self.history_icon = Image.open("images/booking_icon.png")  # Your history icon
         self.history_icon = self.history_icon.resize((30, 30), Image.Resampling.LANCZOS)

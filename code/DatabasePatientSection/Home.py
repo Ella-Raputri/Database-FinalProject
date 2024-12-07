@@ -181,4 +181,3 @@ class PatientHome:
 
         # Hide Save button
         self.save_button.place_forget()
-
