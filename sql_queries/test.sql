@@ -150,3 +150,17 @@ DELETE FROM Booking WHERE DoctorId = 'DOC0000001';
 DELETE FROM Doctor WHERE DoctorId = 'DOC0000001';
 commit;
 rollback;
+
+select * from user;
+
+SELECT 
+CONCAT(d.DiseaseName, ': ', 
+		CASE m.Status 
+			WHEN 0 THEN 'Ongoing'
+			ELSE 'Recovered'
+		END
+	) AS MedHistory
+FROM MedicalHistory m JOIN Disease d 
+ON m.DiseaseId = d.DiseaseId
+WHERE m.PatientId = 'PAT0000002'
+ORDER BY m.Status ASC;

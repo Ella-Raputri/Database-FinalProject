@@ -62,12 +62,19 @@ CREATE TABLE Patient (
     FOREIGN KEY (PatientId) REFERENCES `User`(UserId) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
-CREATE TABLE MedicalHistory (
-    PatientId       VARCHAR(10)   	NOT NULL,
+CREATE TABLE Disease (
+    DiseaseId       VARCHAR(10)   	NOT NULL,
     DiseaseName     VARCHAR(200)	NOT NULL,   
-    `Status`		BIT				NOT NULL, 
-    PRIMARY KEY (PatientId, DiseaseName),
-    FOREIGN KEY (PatientId) REFERENCES Patient(PatientId)
+    PRIMARY KEY (DiseaseId)
+);
+
+CREATE TABLE MedicalHistory (
+    PatientId       VARCHAR(10)   		NOT NULL,
+    DiseaseId     	VARCHAR(200)		NOT NULL,   
+    `Status`		BIT					NOT NULL, 
+    PRIMARY KEY (PatientId, DiseaseId),
+    FOREIGN KEY (PatientId) REFERENCES Patient(PatientId) ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (DiseaseId) REFERENCES Disease(DiseaseId)
 );
 
 CREATE TABLE `Admin` (
@@ -105,7 +112,7 @@ SELECT
     b.CheckUpType,
     b.ReasonOfVisit,
     d.BranchNo
-FROM 
+FROM  
     Booking b
 INNER JOIN 
     Doctor d ON b.DoctorId = d.DoctorId
@@ -116,7 +123,18 @@ INNER JOIN
 
 -- ALTER TABLE `User` ADD COLUMN IsDeleted BIT DEFAULT 0;
 -- start transaction;
--- ALTER TABLE Doctor DROP COLUMN IsDeleted;
--- ALTER TABLE Patient DROP COLUMN IsDeleted;
+-- ALTER TABLE MedicalHistory 
+-- DROP FOREIGN KEY medicalhistory_ibfk_1;
+
+-- ALTER TABLE MedicalHistory 
+-- ADD CONSTRAINT medicalhistory_ibfk_1 
+-- FOREIGN KEY (PatientId) 
+-- REFERENCES Patient(PatientId) 
+-- ON UPDATE CASCADE 
+-- ON DELETE CASCADE;
+
 -- commit;
 -- rollback;
+
+
+select coun

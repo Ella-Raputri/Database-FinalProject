@@ -22,6 +22,8 @@ class AdminPatientPage(tk.Frame):
 
         self.filter_field = 'p.PatientId'
         self.sort_order = 'ASC'
+        self.all_diseases = None
+        self.disease_data = None
 
     def set_user_id(self, user_id):
         self.user_id = user_id
@@ -155,6 +157,31 @@ class AdminPatientPage(tk.Frame):
 
         sort_icon.bind("<Button-1>", lambda e: toggle_sort()) 
 
+         # disease panel
+        self.disease_panel = tk.Frame(self, bg='white',bd=1,relief='groove')
+        self.disease_panel.place(x=1170, y=180, width=165, height=200)
+
+        self.disease_label = tk.Label(self.disease_panel, text="Diseases", font=("Poppins Semibold", 16), 
+                                fg=self.master.font_color2, bg='white')
+        self.disease_label.place(x=10, y=11)
+
+        self.populate_disease()
+
+        if len(self.all_diseases) >= 4:
+            for i in range(3):  
+                label = tk.Label(self.disease_panel, text=f"• {self.all_diseases[i]}", font=("Poppins", 12), bg="white", anchor="w")
+                label.place(x=10, y=49 + i * 25)  
+        else:
+            for i in range(len(self.all_diseases)): 
+                label = tk.Label(self.disease_panel, text=f"• {self.all_diseases[i]}", font=("Poppins", 12), bg="white", anchor="w")
+                label.place(x=10, y=49 + i * 25)  
+
+        
+        dis_view_more_btn = tk.Button(self.disease_panel, text='View Details', bg=self.master.bg_color1,
+                                     fg='white', font=('Poppins', 12), bd=0, command=self.open_disease)
+        dis_view_more_btn.place(x=30, y=146, width=110, height=32)
+
+
         # medical panel
         self.medical_panel = tk.Frame(self, bg=self.master.disabled_color,bd=1,relief='groove')
         self.medical_panel.place(x=1170, y=185 + 180 + 10, width=165, height=195)
@@ -183,6 +210,230 @@ class AdminPatientPage(tk.Frame):
         delete_btn.place(x=1180, y=692, width=135, height=35)
 
         self.create_table()
+    
+    def get_diseases_data(self):
+        try:
+            conn = connect_to_db()
+            with conn.cursor() as cursor:
+                query = """
+                    SELECT DiseaseId,DiseaseName
+                    FROM Disease
+                """
+                cursor.execute(query)
+                result = cursor.fetchall()
+                self.disease_data = [(row[0], row[1]) for row in result]
+        except Exception as e:
+            messagebox.showerror("Error", f"An error occurred: {e}")
+            self.disease_data = []
+        finally:
+            if conn:
+                conn.close()
+
+    def open_disease(self):
+        child_window = tk.Toplevel(self)
+        child_window.configure(bg="white")
+        child_window.title("Disease")
+        child_window.geometry("533x676")  
+
+        # disease label
+        title_label = tk.Label(child_window, text="Diseases",font=("Poppins Semibold", 32), 
+                                 fg='black', bg='white')
+        title_label.place(x=142, y=18)
+
+        # scrollpane 
+        frame1 = tk.Frame(child_window, bd=1, highlightthickness=1)
+        frame1.place(x=26, y=100)
+
+        canvas1 = tk.Canvas(frame1, width=470, height=486, bg='white')
+        scrollbar1 = tk.Scrollbar(frame1, orient="vertical", command=canvas1.yview, bg='white')
+        canvas1.config(yscrollcommand=scrollbar1.set)
+        scrollbar1.pack(side="right", fill="y")
+        canvas1.pack(side="left", fill="both", expand=True)
+
+        content1 = tk.Frame(canvas1, bg='white')
+        canvas1.create_window((0, 0), window=content1, anchor="nw")
+
+        self.delete_photo = tk.PhotoImage(file='images/delete_icon.png')
+        self.edit_photo = tk.PhotoImage(file='images/edit_icon.png')
+        self.get_diseases_data()
+
+        for i, (id,name) in enumerate(self.disease_data):
+            # row container
+            row_frame = tk.Frame(content1, bg='white')
+            row_frame.pack(fill='x', pady=(0, 10))
+
+            # name label
+            name_label = tk.Label(row_frame, text=name, font=("Poppins Medium", 16), 
+                                fg=self.master.font_color2, bg='white', anchor="w")
+            name_label.grid(row=0, column=0, padx=(0, 10), sticky="w")
+
+            # edit button
+            edit_button = tk.Button(row_frame, image=self.edit_photo, 
+                                    command=lambda id=id, name=name, child_window=child_window: self.edit_disease(id, name, child_window))
+            edit_button.grid(row=0, column=1, padx=(10, 5), sticky="e")
+
+            # delete button            
+            delete_button = tk.Button(row_frame, image=self.delete_photo, 
+                                    command=lambda id=id, name=name, child_window=child_window: self.delete_disease(id,name,child_window))
+            delete_button.grid(row=0, column=2, padx=(5, 0), sticky="e")
+
+        content1.update_idletasks()
+        canvas1.config(scrollregion=canvas1.bbox("all"))
+        canvas1.bind("<MouseWheel>", lambda event, canvas=canvas1: self.on_mouse_wheel(event, canvas))
+
+        # add btn
+        self.add_photo = tk.PhotoImage(file='images/add_icon.png')
+        add_button = tk.Button(child_window, image=self.add_photo, 
+                                command=self.add_disease)
+        add_button.place(x=475, y=100)
+
+        # ok btn
+        ok_button = tk.Button(child_window, text="OK", font=("Poppins Semibold", 18), bg=self.master.bg_color1, 
+                                fg="white", command=child_window.destroy)
+        ok_button.place(x=211, y=615, width=116, height=40)
+
+        child_window.resizable(False, False)
+
+    def add_disease(self):
+        add_window = tk.Toplevel(self)
+        add_window.title("Add New Disease")
+        add_window.geometry("500x200")
+        add_window.configure(bg="white")
+
+        tk.Label(add_window, text="Disease Name:", font=("Poppins", 14), bg="white").pack(pady=(20, 5))
+        name_entry = tk.Entry(add_window, font=("Poppins", 12), width=30, bd=2, relief="solid")
+        name_entry.pack(pady=5)
+
+        def save_disease():
+            disease_name = name_entry.get().strip()
+            if not disease_name:
+                messagebox.showerror("Error", "All fields are required!")
+                return
+
+            try:
+                conn = connect_to_db()
+                with conn.cursor() as cursor:
+                    check_query = "SELECT COUNT(*) FROM Disease WHERE DiseaseName = %s"
+                    cursor.execute(check_query, (disease_name,))
+                    exists = cursor.fetchone()[0]
+
+                    if exists:
+                        messagebox.showerror("Error", "A disease with the same name already exists!")
+                        return
+                
+                    cursor.execute("SELECT DiseaseId FROM Disease ORDER BY DiseaseID DESC LIMIT 1")
+                    last_disease_id = cursor.fetchone()
+
+                    if last_disease_id:
+                        last_id = last_disease_id[0]  
+                        numeric_part = int(last_id[3:])  
+                        new_numeric_part = numeric_part + 1
+                    else:
+                        new_numeric_part = 1
+                    
+                    new_disease_id = f"DIS{str(new_numeric_part).zfill(7)}"
+
+                    query = """
+                         INSERT INTO Disease (DiseaseId, DiseaseName)
+                        VALUES (%s, %s)
+                    """
+                    cursor.execute(query, (new_disease_id, disease_name))
+                    conn.commit()
+                    messagebox.showinfo("Success", "New disease added successfully!")
+            except Exception as e:
+                messagebox.showerror("Error", f"Failed to add disease: {e}")
+            finally:
+                if conn:
+                    conn.close()
+                add_window.destroy() 
+                self.open_disease() 
+
+        save_button = tk.Button(add_window, text="Save", font=("Poppins", 14), bg=self.master.bg_color1, fg="white", command=save_disease)
+        save_button.pack(pady=(20, 10), ipadx=10, ipady=2)
+
+    def edit_disease(self, disease_id, current_name, disease_window):
+        edit_window = tk.Toplevel(self)
+        edit_window.title("Edit Disease")
+        edit_window.geometry("500x200")
+        edit_window.configure(bg="white")
+
+        tk.Label(edit_window, text="Disease Name:", font=("Poppins", 14), bg="white").pack(pady=(20, 5))
+        diseasename_entry = tk.Entry(edit_window, font=("Poppins", 12), width=30, bd=2, relief="solid")
+        diseasename_entry.pack(pady=5)
+        diseasename_entry.insert(0, current_name)   
+
+        def save_changes():
+            new_name = diseasename_entry.get().strip()
+            if not new_name:
+                messagebox.showerror("Error", "All fields are required!")
+                return         
+
+            try:
+                conn = connect_to_db()
+                with conn.cursor() as cursor:                    
+                    check_query = "SELECT COUNT(*) FROM Disease WHERE DiseaseName = %s"
+                    cursor.execute(check_query, (new_name,))
+                    exists = cursor.fetchone()[0]
+
+                    if exists:
+                        messagebox.showerror("Error", "A disease with the same name already exists!")
+                        return  
+            
+                    query = """
+                        UPDATE Disease
+                        SET DiseaseName = %s WHERE DiseaseID = %s
+                    """
+                    cursor.execute(query, (new_name, disease_id))
+                    conn.commit()
+                    messagebox.showinfo("Success", "Disease updated successfully!")
+            except Exception as e:
+                messagebox.showerror("Error", f"Failed to update disease: {e}")
+            finally:
+                if conn:
+                    conn.close()
+                    
+                edit_window.destroy()
+                disease_window.destroy()  
+                self.open_disease() 
+
+        save_button = tk.Button(edit_window, text="Save", font=("Poppins", 14), bg=self.master.bg_color1, fg="white", command=save_changes)
+        save_button.pack(pady=(20, 10), ipadx=10, ipady=2)
+
+    def delete_disease(self, disease_id, disease_name, disease_window):
+        try:
+            conn = connect_to_db()
+            if not conn:
+                messagebox.showerror("Error", "Database connection failed.")
+                return
+
+            with conn.cursor() as cursor:
+                query = "SELECT COUNT(PatientId) FROM MedicalHistory WHERE DiseaseId = %s"
+                cursor.execute(query, (disease_id,))
+                amt = cursor.fetchone()[0]  
+
+                if amt > 0:
+                    messagebox.showerror(
+                        "Error",
+                        f"Cannot delete '{disease_name}' because there are {amt} patient(s) with this disease."
+                    )
+                    return
+
+                confirm = messagebox.askyesno(
+                    "Confirm Delete",
+                    f"Are you sure you want to delete the disease '{disease_name}'?"
+                )
+                if confirm:
+                    query = "DELETE FROM Disease WHERE DiseaseId = %s"
+                    cursor.execute(query, (disease_id,))
+                    conn.commit()
+                    messagebox.showinfo("Success", f"Disease '{disease_name}' has been deleted.")
+                    disease_window.destroy()
+                    self.open_disease() 
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to delete disease: {e}")
+        finally:
+            if conn:
+                conn.close()
     
     def add_patient(self):  
         def show_hide_password():
@@ -830,15 +1081,16 @@ class AdminPatientPage(tk.Frame):
             with conn.cursor() as cursor:
                 query = """
                     SELECT 
-                    CONCAT(DiseaseName, ': ', 
-                            CASE Status 
+                    CONCAT(d.DiseaseName, ': ', 
+                            CASE m.Status 
                                 WHEN 0 THEN 'Ongoing'
                                 ELSE 'Recovered'
                             END
                         ) AS MedHistory
-                    FROM MedicalHistory
-                    WHERE PatientId = %s
-                    ORDER BY Status ASC;
+                    FROM MedicalHistory m JOIN Disease d 
+                    ON m.DiseaseId = d.DiseaseId
+                    WHERE m.PatientId = %s
+                    ORDER BY m.Status ASC;
                 """
                 cursor.execute(query, (self.patient_id,))
                 result = cursor.fetchall()
@@ -926,15 +1178,30 @@ class AdminPatientPage(tk.Frame):
 
         child_window.resizable(False, False)
 
+    def populate_disease(self):
+        try:
+            conn = connect_to_db()
+            with conn.cursor() as cursor:
+                cursor.execute("SELECT DiseaseName FROM Disease")
+                self.all_diseases = [row[0] for row in cursor.fetchall()]
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to fetch diseases: {e}")
+            return
+        finally:
+            if conn:
+                conn.close()
+
     def add_medhist(self):
         add_window = tk.Toplevel(self)
         add_window.title("Add New Medical History")
-        add_window.geometry("500x400")
+        add_window.geometry("500x300")
         add_window.configure(bg="white")
 
+        self.populate_disease()
+
         tk.Label(add_window, text="Disease Name:", font=("Poppins", 14), bg="white").pack(pady=(20, 5))
-        disease_entry = tk.Entry(add_window, font=("Poppins", 12), width=30, bd=2, relief="solid")
-        disease_entry.pack(pady=5)
+        disease_combobox = ttk.Combobox(add_window, values=self.all_diseases, font=("Poppins", 12), state="readonly", width=28)
+        disease_combobox.pack(pady=5)
 
         tk.Label(add_window, text="Status:", font=("Poppins", 14), bg="white").pack(pady=(20, 5))
         status_entry = ttk.Combobox(add_window, values=["Ongoing","Recovered"], 
@@ -942,7 +1209,7 @@ class AdminPatientPage(tk.Frame):
         status_entry.pack(pady=5)
 
         def save_medhist():
-            disease = disease_entry.get().strip()
+            disease = disease_combobox.get().strip()
             status_val = status_entry.get().strip()
 
             if status_val == "Ongoing": status = 0
@@ -961,7 +1228,9 @@ class AdminPatientPage(tk.Frame):
                     check_query = """
                         SELECT COUNT(*)
                         FROM MedicalHistory
-                        WHERE PatientId = %s AND DiseaseName = %s
+                        WHERE PatientId = %s AND DiseaseId = (
+                            SELECT DiseaseId FROM Disease WHERE DiseaseName = %s
+                        )
                     """
                     cursor.execute(check_query, (self.patient_id, disease))
                     exists = cursor.fetchone()[0]
@@ -971,8 +1240,8 @@ class AdminPatientPage(tk.Frame):
                         return
 
                     query = """
-                        INSERT INTO MedicalHistory (PatientId, DiseaseName, Status)
-                        VALUES (%s, %s, %s)
+                        INSERT INTO MedicalHistory (PatientId, DiseaseId, Status)
+                        VALUES (%s, (SELECT DiseaseId FROM Disease WHERE DiseaseName = %s), %s)
                     """
                     cursor.execute(query, (self.patient_id, disease, status))
                     conn.commit()
@@ -993,13 +1262,14 @@ class AdminPatientPage(tk.Frame):
     def edit_medhist(self, curr_disease, curr_status, mhwindow):
         edit_window = tk.Toplevel(self)
         edit_window.title("Edit Schedule")
-        edit_window.geometry("500x400")
+        edit_window.geometry("500x300")
         edit_window.configure(bg="white")
 
+        self.populate_disease()
         tk.Label(edit_window, text="Disease Name:", font=("Poppins", 14), bg="white").pack(pady=(20, 5))
-        disease_entry = tk.Entry(edit_window, font=("Poppins", 12), width=30, bd=2, relief="solid")
-        disease_entry.pack(pady=5)
-        disease_entry.insert(0, curr_disease)
+        disease_combobox = ttk.Combobox(edit_window, values=self.all_diseases, font=("Poppins", 12), state="readonly", width=28)
+        disease_combobox.pack(pady=5)
+        disease_combobox.set(curr_disease)
 
         tk.Label(edit_window, text="Status:", font=("Poppins", 14), bg="white").pack(pady=(20, 5))
         status_entry = ttk.Combobox(edit_window, values=["Ongoing", "Recovered"], 
@@ -1008,7 +1278,7 @@ class AdminPatientPage(tk.Frame):
         status_entry.set(curr_status)
         
         def save_changes():
-            new_disease = disease_entry.get().strip()
+            new_disease = disease_combobox.get().strip()
             new_status_val = status_entry.get().strip()
 
             if new_status_val == "Ongoing": new_status = 0
@@ -1027,7 +1297,9 @@ class AdminPatientPage(tk.Frame):
                         check_query = """
                             SELECT COUNT(*)
                             FROM MedicalHistory
-                            WHERE PatientId = %s AND DiseaseName = %s
+                            WHERE PatientId = %s AND DiseaseId = (
+                                SELECT DiseaseId FROM Disease WHERE DiseaseName = %s
+                            )
                         """
                         cursor.execute(check_query, (self.patient_id, new_disease))
                         exists = cursor.fetchone()[0]
@@ -1039,8 +1311,8 @@ class AdminPatientPage(tk.Frame):
                     # Update the record
                     update_query = """
                         UPDATE MedicalHistory
-                        SET DiseaseName = %s, Status = %s
-                        WHERE PatientId = %s AND DiseaseName = %s
+                        SET DiseaseId = (SELECT DiseaseId FROM Disease WHERE DiseaseName = %s), Status = %s
+                        WHERE PatientId = %s AND DiseaseId = (SELECT DiseaseId FROM Disease WHERE DiseaseName = %s)
                     """
                     cursor.execute(update_query, (new_disease, new_status, self.patient_id, curr_disease))
                     conn.commit()
@@ -1069,7 +1341,9 @@ class AdminPatientPage(tk.Frame):
                     "Are you sure you want to delete this medical history?"
                 )
                 if confirm:
-                    query = "DELETE FROM MedicalHistory WHERE PatientId = %s AND DiseaseName = %s"
+                    query = "DELETE FROM MedicalHistory WHERE PatientId = %s \
+                    AND DiseaseId = (SELECT DiseaseId FROM Disease WHERE DiseaseName = %s)"
+
                     cursor.execute(query, (self.patient_id, disease))
                     conn.commit()
                     messagebox.showinfo("Success", "Medical history deleted successfully!")

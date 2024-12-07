@@ -428,7 +428,7 @@ class AdminDashboard(tk.Frame):
 
         # view more button
         view_more_btn = tk.Button(self, text='View More', bg=self.master.bg_color1,
-                                     fg='white', font=('Poppins', 12), bd=0)
+                                     fg='white', font=('Poppins', 12), bd=0, command=self.navigate_booking)
         view_more_btn.place(x=571, y=673, width=99, height=33)
 
     def on_mouse_wheel(self, event, canvas):

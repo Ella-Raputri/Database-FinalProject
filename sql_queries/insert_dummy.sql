@@ -9,6 +9,7 @@ SET @doctors_per_branch = 50;
 SET @admins_per_branch = 5;
 
 DROP PROCEDURE IF EXISTS InsertDummyMedicalHistory;
+DROP PROCEDURE IF EXISTS InsertDummyDiseases;
 DROP PROCEDURE IF EXISTS InsertDummyDoctorSchedules;
 DROP PROCEDURE IF EXISTS InsertDummyBookings;
 DROP PROCEDURE IF EXISTS InsertDummyUsers;
@@ -129,39 +130,100 @@ select * from patient;
 select * from doctor;
 select * from admin;
 
+-- Insert 100 diseases 
+DELIMITER $$
+CREATE PROCEDURE InsertDummyDiseases()
+BEGIN
+    DECLARE i INT DEFAULT 1;
+    WHILE i <= 100 DO
+        INSERT INTO Disease (DiseaseId, DiseaseName)
+        VALUES (CONCAT('DIS', LPAD(i, 7, '0')), CONCAT('Disease ', i));
+        SET i = i + 1;
+    END WHILE;
+END$$
+DELIMITER ;
+CALL InsertDummyDiseases();
+
+select * from disease;
+
+
 -- Insert Medical History for each patient (1-5 records per patient)
 DELIMITER $$
+
 CREATE PROCEDURE InsertDummyMedicalHistory()
 BEGIN
     DECLARE patient_id INT DEFAULT 1;
     DECLARE history_count INT;
-    DECLARE disease_name VARCHAR(255);
-    
-    WHILE patient_id <= @total_branches * @patients_per_branch DO
-        SET history_count = FLOOR(1 + RAND() * 5); 
+    DECLARE disease_id VARCHAR(10);
+
+    -- Create a temporary table for DiseaseId values
+    CREATE TEMPORARY TABLE TempDiseases AS 
+    SELECT DiseaseId FROM Disease;
+
+    -- Check if there are diseases to assign
+    IF (SELECT COUNT(*) FROM TempDiseases) = 0 THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'No diseases found in the Disease table.';
+    END IF;
+
+    -- Debug message: Start inserting
+    SELECT 'Starting insertion process' AS DebugInfo;
+
+    WHILE patient_id <= 5 * 150 DO
+        SET history_count = FLOOR(1 + RAND() * 5);
+
+        -- Debug message: Patient being processed
+        SELECT CONCAT('Processing PatientId: PAT', LPAD(patient_id, 7, '0')) AS DebugInfo;
+
         WHILE history_count > 0 DO
-            SET disease_name = CONCAT('Disease ', FLOOR(1 + RAND() * 100));
-            
-            WHILE EXISTS (SELECT 1 FROM MedicalHistory WHERE PatientId = CONCAT('PAT', LPAD(patient_id, 7, '0')) AND DiseaseName = disease_name) DO
-                SET disease_name = CONCAT('Disease ', FLOOR(1 + RAND() * 100));
-            END WHILE;
-            
-            INSERT INTO MedicalHistory (PatientId, DiseaseName, `Status`)
-            VALUES (
-                CONCAT('PAT', LPAD(patient_id, 7, '0')), 
-                disease_name,
-                RAND() < 0.5 
-            );
-            
-            SET history_count = history_count - 1;
+            -- Fetch a random DiseaseId
+            SELECT DiseaseId 
+            INTO disease_id
+            FROM TempDiseases
+            ORDER BY RAND()
+            LIMIT 1;
+
+            -- Debug message: Selected DiseaseId
+            SELECT CONCAT('Selected DiseaseId: ', disease_id) AS DebugInfo;
+
+            -- Check uniqueness for this PatientId and DiseaseId
+            IF NOT EXISTS (
+                SELECT 1 
+                FROM MedicalHistory 
+                WHERE PatientId = CONCAT('PAT', LPAD(patient_id, 7, '0')) 
+                  AND DiseaseId = disease_id
+            ) THEN
+                -- Insert into MedicalHistory
+                INSERT INTO MedicalHistory (PatientId, DiseaseId, `Status`)
+                VALUES (
+                    CONCAT('PAT', LPAD(patient_id, 7, '0')), 
+                    disease_id,
+                    RAND() < 0.5
+                );
+
+                -- Debug message: Insert success
+                SELECT CONCAT('Inserted: PatientId PAT', LPAD(patient_id, 7, '0'), ' DiseaseId: ', disease_id) AS DebugInfo;
+
+                SET history_count = history_count - 1;
+            ELSE
+                -- Debug message: Duplicate found
+                SELECT CONCAT('Duplicate for PatientId PAT', LPAD(patient_id, 7, '0'), ' DiseaseId: ', disease_id) AS DebugInfo;
+            END IF;
         END WHILE;
+
+        -- Move to next patient
         SET patient_id = patient_id + 1;
     END WHILE;
+
+    -- Clean up
+    DROP TEMPORARY TABLE TempDiseases;
 END$$
+
 DELIMITER ;
+
 CALL InsertDummyMedicalHistory();
 
-select * from medicalhistory;
+select * from medicalhistory order by diseaseid;
+
 
 -- Insert Doctor Schedules (1-5 per doctor)
 DELIMITER $$
