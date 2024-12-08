@@ -206,8 +206,13 @@ class PatientHome:
 
         # Show the labels again (now updated)
         self.name.place(x=110, y=300)
+        self.sex.place(x=110, y=350)
+        self.dob.place(x=110, y=400)
+        self.address.place(x=110, y=450)
         self.email.place(x=110, y=500)
         self.phone.place(x=110, y=550)
+        self.emergency.place(x=110, y=600)
+        self.insurance.place(x=110, y=650)
 
         # Hide Save button
         self.save_button.place_forget()
@@ -222,3 +227,8 @@ class PatientHome:
             self.name.config(text=f"Full Name: {first_name} {last_name}")
             self.email.config(text=f"Email: {email}")
             self.phone.config(text=f"Phone Number: {phone}")
+            self.sex.config(text=f"Sex: {sex}")
+            self.dob.config(text=f"Date of Birth: {dob}")
+            self.address.config(text=f"Address: {address}")
+            self.emergency.config(text=f"Emergency Contact: {emergency}")
+            self.insurance.config(text=f"Insurance: {insurance}")
