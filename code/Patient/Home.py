@@ -2,19 +2,13 @@ import tkinter as tk
 from tkinter import filedialog
 from PIL import Image, ImageTk
 import mysql.connector
+from db_connections import connect_to_db
 
 class PatientHome:
     def __init__(self, parent):
         self.frame = tk.Frame(parent, bg='white')
         self.frame.pack(fill='both', expand=True)
 
-        # Setup database connection
-        self.db_connection = mysql.connector.connect(
-            host="localhost",
-            user="root",
-            password="BinusSQL2005",  # Update with your MySQL password
-            database="ClinicSystemDB"
-        )
         self.cursor = self.db_connection.cursor()
 
         # Fetch patient data from the database
