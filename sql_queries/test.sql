@@ -83,6 +83,16 @@ LEFT JOIN Patient p ON bb.PatientId = p.PatientId
 WHERE bb.DoctorId = 'DOC0000004' AND bb.AppointmentStatus = 'Pending'
 ORDER BY bb.AppointmentDate ASC, STR_TO_DATE(bb.AppointmentHour, '%H:%i') ASC;
 
+SELECT 
+d.DiseaseName,  
+(CASE m.Status 
+	WHEN 0 THEN 'Ongoing'
+	ELSE 'Recovered'
+END) AS MedStatus
+FROM MedicalHistory m JOIN Disease d 
+ON m.DiseaseId = d.DiseaseId
+WHERE m.PatientId = 'PAT0000003'
+ORDER BY m.Status ASC;
 
 SELECT 
     COUNT(BookingId) FROM BranchBookings 

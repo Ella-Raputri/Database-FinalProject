@@ -224,6 +224,11 @@ class DoctorDashboard(tk.Frame):
                 self.profile_pic = ImageTk.PhotoImage(img)
                 self.profile_pic_label.config(image=self.profile_pic)
                 self.profile_pic_label.image = self.profile_pic
+            
+            self.medical_btn = tk.Button(self, text='Medical History', bg=self.master.bg_color1,
+                                     fg='white', font=('Poppins', 12), bd=0, 
+                                     command=lambda: self.open_medical(patient['patient_id'], patient['name']))
+            self.medical_btn.place(x=780, y=373, width=127, height=39)
 
             text_desc = f'Patient Full Name : {patient["name"]} \nGender: {patient["gender"]} \nEmail: {patient["email"]} \
             \nTelp: {patient["telp"]} \nDate: {patient["date"]} \nHour: {patient["hour"]} \nCheck Up Type: {patient["check_type"]}'
@@ -238,6 +243,88 @@ class DoctorDashboard(tk.Frame):
                                 fg=self.master.font_color2, bg='white')
             desc_label.place(x=907, y=255)
 
+    def get_medhistory(self, id):
+        try:
+            conn = connect_to_db()
+            with conn.cursor() as cursor:
+                query = """
+                    SELECT 
+                    d.DiseaseName,  
+                    (CASE m.Status 
+                        WHEN 0 THEN 'Ongoing'
+                        ELSE 'Recovered'
+                    END) AS MedStatus
+                    FROM MedicalHistory m JOIN Disease d 
+                    ON m.DiseaseId = d.DiseaseId
+                    WHERE m.PatientId = %s
+                    ORDER BY m.Status ASC;
+                """
+                cursor.execute(query, (id,))
+                result = cursor.fetchall()
+                return result
+        except Exception as e:
+            messagebox.showerror("Error", f"An error occurred: {e}")
+            return []
+        finally:
+            if conn:
+                conn.close()
+
+    def open_medical(self, patient_id, patient_name):
+        child_window = tk.Toplevel(self)
+        child_window.configure(bg="white")
+        child_window.title("Medical History")
+        child_window.geometry("533x676")  
+
+        medical_history = self.get_medhistory(patient_id)
+
+        # medical label
+        mhtitle_label = tk.Label(child_window, text=f"{patient_name.split()[0]} Medical History",font=("Poppins Semibold", 24), 
+                                 fg='black', bg='white')
+        mhtitle_label.place(x=25, y=18)
+
+        # scrollpane 
+        frame1 = tk.Frame(child_window, bd=1, highlightthickness=1)
+        frame1.place(x=26, y=100)
+
+        canvas1 = tk.Canvas(frame1, width=470, height=486, bg='white')
+        scrollbar1 = tk.Scrollbar(frame1, orient="vertical", command=canvas1.yview, bg='white')
+        canvas1.config(yscrollcommand=scrollbar1.set)
+        scrollbar1.pack(side="right", fill="y")
+        canvas1.pack(side="left", fill="both", expand=True)
+
+        content1 = tk.Frame(canvas1, bg='white')
+        canvas1.create_window((0, 0), window=content1, anchor="nw")
+
+        for i, entry in enumerate(medical_history):
+            disease = entry[0]
+            status = entry[1]
+    
+            # row container 
+            row_frame = tk.Frame(content1, bg='white')
+            row_frame.pack(fill='x', pady=(0, 10))
+
+            # name label
+            name_label = tk.Label(row_frame, text=disease, font=("Poppins Medium", 16), 
+                                fg=self.master.font_color2, bg='white', anchor="w")
+            name_label.grid(row=0, column=0, padx=(5, 10), sticky="w")
+
+            # desc label
+            desc_label = tk.Label(row_frame, text=status,
+                                font=("Poppins", 12), fg=self.master.font_color2, bg='white', 
+                                wraplength=450, justify="left", anchor="w")
+            desc_label.grid(row=1, column=0, columnspan=3, sticky="w",padx=(5, 10), pady=(0, 10))
+    
+
+        content1.update_idletasks()
+        canvas1.config(scrollregion=canvas1.bbox("all"))
+        canvas1.bind("<MouseWheel>", lambda event, canvas=canvas1: self.on_mouse_wheel(event, canvas))
+
+        # ok btn
+        ok_button = tk.Button(child_window, text="OK", font=("Poppins Semibold", 18), bg=self.master.bg_color1, 
+                                fg="white", command=child_window.destroy)
+        ok_button.place(x=206, y=615, width=116, height=40)
+        child_window.resizable(False, False)
+
     def create_patient_view(self):
         # patient view
         patient_view_label = tk.Label(self, text="Pending Patients", font=("Poppins Semibold", 18), fg=self.master.font_color1, bg='white')
@@ -251,11 +338,6 @@ class DoctorDashboard(tk.Frame):
         note_title_label.place(x=782, y=462)
 
         self.fetch_patients()
-
-        medical_btn = tk.Button(self, text='Medical History', bg=self.master.bg_color1,
-                                     fg='white', font=('Poppins', 12), bd=0, command=self.next_patient)
-        medical_btn.place(x=780, y=373, width=127, height=39)
-
         next_btn = tk.Button(self, bg='white',bd=0, text=">", fg='black',
                              font=("Poppins", 24), command=self.next_patient)
         next_btn.place(x=1276, y=664, width=15, height=24)
