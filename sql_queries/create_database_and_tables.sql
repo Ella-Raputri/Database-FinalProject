@@ -119,7 +119,9 @@ INNER JOIN
 INNER JOIN 
     `User` du ON d.DoctorId = du.UserId
 INNER JOIN 
-    `User` pu ON b.PatientId = pu.UserId;
+    `User` pu ON b.PatientId = pu.UserId
+WHERE 
+    pu.IsDeleted = 0 AND du.IsDeleted = 0;
 
 -- ALTER TABLE `User` ADD COLUMN IsDeleted BIT DEFAULT 0;
 -- start transaction;

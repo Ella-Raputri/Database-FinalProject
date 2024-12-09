@@ -99,7 +99,7 @@ class LoginPage(tk.Frame):
         cursor = conn.cursor()
 
         try:
-            query = "SELECT UserId, RoleName FROM User WHERE Email = %s AND Password = %s"
+            query = "SELECT UserId, RoleName FROM User WHERE Email = %s AND Password = %s AND IsDeleted = 0"
             cursor.execute(query, (email, password))
             
             result = cursor.fetchone()  
@@ -111,6 +111,10 @@ class LoginPage(tk.Frame):
                 if role_name == 'Admin':
                     self.master.admin_dashboard.set_user_id(user_id)
                     self.master.show_frame(self.master.admin_dashboard)
+
+                if role_name == 'Doctor':
+                    self.master.doctor_dashboard.set_user_id(user_id)
+                    self.master.show_frame(self.master.doctor_dashboard)
             else:
                 messagebox.showerror("Error", "Invalid email or password!")
         except Exception as e:

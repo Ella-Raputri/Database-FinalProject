@@ -5,6 +5,7 @@ from Admin.admin_dashboard import AdminDashboard
 from Admin.admin_doctors import AdminDoctorPage
 from Admin.admin_patient import AdminPatientPage
 from Admin.admin_booking import AdminBookingPage
+from Doctor.doctor_dashboard import DoctorDashboard
 
 class App(tk.Tk):
     def __init__(self):
@@ -30,15 +31,19 @@ class App(tk.Tk):
 
         # admin
         self.admin_bg = '#F5F5F5'
-        
         self.admin_doctor_page = AdminDoctorPage(self)
         self.admin_dashboard = AdminDashboard(self)
         self.admin_patient_page = AdminPatientPage(self)
         self.admin_booking_page = AdminBookingPage(self)
 
+        # doctor
+        self.doctor_bg = '#F1F9FF'
+        self.doctor_dashboard = DoctorDashboard(self)
+
         self.show_frame(self.login_page)
 
     # user1@example.com
+    # doctor2@example.com
 
     def center_window(self):
         screen_width = self.winfo_screenwidth()

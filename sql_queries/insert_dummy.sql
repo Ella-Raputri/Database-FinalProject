@@ -95,7 +95,7 @@ BEGIN
         -- Insert doctors
         WHILE doctor_id <= branch_id * @doctors_per_branch DO
             INSERT INTO `User` (UserId, Email, `Password`, FirstName, LastName, Gender, PhoneNumber, RoleName, City, AddressDetail)
-            VALUES (CONCAT('DOC', LPAD(doctor_id, 7, '0')), CONCAT('user', doctor_id, '@example.com'), 'password', 
+            VALUES (CONCAT('DOC', LPAD(doctor_id, 7, '0')), CONCAT('doctor', doctor_id, '@example.com'), 'password', 
                     CONCAT('FirstName', doctor_id), CONCAT('LastName', doctor_id), CASE WHEN RAND() < 0.5 THEN 1 ELSE 0 END,
                     CONCAT('081234567', doctor_id), 'Doctor', CONCAT('City', branch_id), 
                     CONCAT('Branch ', branch_id, ' Address'));
@@ -109,7 +109,7 @@ BEGIN
         -- Insert admins
         WHILE admin_id <= branch_id * @admins_per_branch DO
             INSERT INTO `User` (UserId, Email, `Password`, FirstName, LastName, Gender, PhoneNumber, RoleName, City, AddressDetail)
-            VALUES (CONCAT('ADM', LPAD(admin_id, 7, '0')), CONCAT('user', admin_id, '@example.com'), 'password', 
+            VALUES (CONCAT('ADM', LPAD(admin_id, 7, '0')), CONCAT('patient', admin_id, '@example.com'), 'password', 
                     CONCAT('FirstName', admin_id), CONCAT('LastName', admin_id), CASE WHEN RAND() < 0.5 THEN 1 ELSE 0 END,
                     CONCAT('081234567', admin_id), 'Admin', CONCAT('City', branch_id), 
                     CONCAT('Branch ', branch_id, ' Address'));

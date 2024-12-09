@@ -127,7 +127,7 @@ select * from patient order by patientid desc;
 select * from doctor ;
 select * from admin;
 
-select * from branchbookings where branchNo = 1 order by appointmentdate desc;
+select * from branchbookings where appointmentstatus = 'Cancelled' order by bookingid desc;
 SELECT 
     BookingId, PatientName, DoctorName, AppointmentDate, AppointmentHour,
     AppointmentStatus, CheckUpType, ReasonOfVisit
@@ -164,3 +164,27 @@ FROM MedicalHistory m JOIN Disease d
 ON m.DiseaseId = d.DiseaseId
 WHERE m.PatientId = 'PAT0000002'
 ORDER BY m.Status ASC;
+
+select * from user where rolename = "doctor";
+update user set isdeleted = 1 where userid = 'DOC0000001';
+select * from doctor;
+-- Step 1: Create a temporary table to assign the new emails
+-- Step 1: Create a temporary table with unique numbers for each doctor
+-- CREATE TEMPORARY TABLE TempEmails AS
+-- SELECT 
+--     UserId, 
+--     CONCAT('pat', ROW_NUMBER() OVER (ORDER BY UserId), '@example.com') AS NewEmail
+-- FROM `User`
+-- WHERE UserId LIKE '%PAT%';
+
+-- -- Step 2: Update the User table using the temporary table
+-- UPDATE `User` u
+-- JOIN TempEmails t ON u.UserId = t.UserId
+-- SET u.Email = t.NewEmail;
+
+-- -- Step 3: Clean up the temporary table
+-- DROP TEMPORARY TABLE TempEmails;
+
+
+
+
