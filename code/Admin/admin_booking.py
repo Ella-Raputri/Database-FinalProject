@@ -212,7 +212,7 @@ class AdminBookingPage(tk.Frame):
 
         for col in columns:
             self.table.heading(col, text=col)
-            self.table.column(col, width=200, anchor=tk.CENTER)
+            self.table.column(col, width=220, anchor=tk.CENTER)
 
         for i, row in enumerate(self.data):
             tags = "odd_row" if i % 2 == 0 else "even_row"

@@ -43,7 +43,7 @@ class App(tk.Tk):
         self.show_frame(self.login_page)
 
     # user1@example.com
-    # doctor2@example.com
+    # doctor4@example.com
 
     def center_window(self):
         screen_width = self.winfo_screenwidth()
