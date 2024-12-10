@@ -1,7 +1,7 @@
 import tkinter as tk
 from Booking import Booking
 from Home import PatientHome
-from history import HistoryPage
+# from history import HistoryPage
 from PIL import Image, ImageTk
 import mysql.connector
 from db_connection import connect_to_db
@@ -20,8 +20,6 @@ class MainApp(tk.Tk):
         # Create a Label widget to hold the background image
         self.bg_label = tk.Label(self, image=self.bg_photo)
         self.bg_label.place(relwidth=1, relheight=1)  # Make the background image fill the window
-
-
 
         # Sidebar buttons (Labels with icons)
         self.home_icon = Image.open("images/home.png")  # Your home icon
@@ -56,6 +54,8 @@ class MainApp(tk.Tk):
         self.home_label.bind("<Button-1>", self.show_home)
         self.booking_label.bind("<Button-1>", self.show_booking)
         self.history_label.bind("<Button-1>", self.show_history)
+        
+        self.show_home()
 
     def show_home(self, event=None):
         # Clear content and show home
@@ -73,7 +73,7 @@ class MainApp(tk.Tk):
         # Clear content and show history
         for widget in self.content_frame.winfo_children():
             widget.destroy()
-        HistoryPage(self.content_frame)
+        # HistoryPage(self.content_frame)
 
 
 if __name__ == "__main__":

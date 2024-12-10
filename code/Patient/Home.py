@@ -2,7 +2,7 @@ import tkinter as tk
 from tkinter import filedialog
 from PIL import Image, ImageTk
 import mysql.connector
-from db_connections import connect_to_db
+from db_connection import connect_to_db
 
 class PatientHome:
     def __init__(self, parent):

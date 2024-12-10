@@ -4,6 +4,6 @@ def connect_to_db():
     return mysql.connector.connect(
         host="localhost",
         user="root",
-        password="BinusSQL2005", 
+        password="Ella84712005#", 
         database="ClinicSystemDB"
     )

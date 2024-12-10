@@ -58,11 +58,12 @@ USE ClinicSystemDB;
 
 USE ClinicSystemDB;
 
-select * from user order by userid desc;
+select * from user where userid like '%doc%';
 select count(*) from doctor where ProfilePicture is null;
 select count(*) from patient where ProfilePicture is null;
 select * from patient ;
-select * from doctor;
+select * from doctorschedule where doctorid = 'DOC0000004';
+SELECT CONCAT(SpecialtyId, ': ', SpecialtyName) FROM Specialty;
 
 -- SET SQL_SAFE_UPDATES = 0;
 -- UPDATE Doctor d
@@ -119,7 +120,10 @@ SELECT
     COUNT(BookingId) FROM BranchBookings 
 WHERE DoctorId = 'DOC0000004' AND AppointmentDate = CURDATE();
 
-
+SELECT
+	d.ProfilePicture, d.SpecialtyId, s.SpecialtyName
+FROM Doctor d JOIN Specialty s ON d.SpecialtyId = s.SpecialtyId
+WHERE d.DoctorId = 'DOC0000004';
 
 -- Step 1: Create a temporary table to assign the new emails
 -- Step 1: Create a temporary table with unique numbers for each doctor
