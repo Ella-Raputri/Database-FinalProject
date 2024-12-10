@@ -71,7 +71,6 @@ SELECT
 	bb.PatientName,
 	u.Gender,
 	u.PhoneNumber, 
-	p.ProfilePicture,
 	DATE_FORMAT(bb.AppointmentDate, '%Y-%m-%d') AS AppointmentDate, 
 	DATE_FORMAT(bb.AppointmentHour, '%H:%i') AS AppointmentHour, 
 	bb.AppointmentStatus, 
@@ -79,7 +78,6 @@ SELECT
 	bb.ReasonOfVisit
 FROM BranchBookings bb
 JOIN `User` u ON bb.PatientId = u.UserId
-LEFT JOIN Patient p ON bb.PatientId = p.PatientId
 WHERE bb.DoctorId = 'DOC0000004' AND bb.AppointmentStatus = 'Pending'
 ORDER BY bb.AppointmentDate ASC, STR_TO_DATE(bb.AppointmentHour, '%H:%i') ASC;
 

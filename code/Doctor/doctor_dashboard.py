@@ -11,7 +11,6 @@ class DoctorDashboard(tk.Frame):
         self.user_id = None
         self.email = None
         self.name = None
-        self.branch_no = None
         self.default_pic = ImageTk.PhotoImage(Image.open("images/default_profile.png").resize((100, 100)))
         
         # patient
@@ -52,9 +51,8 @@ class DoctorDashboard(tk.Frame):
         profile_label.place(x=23, y=257)
 
     def navigate_history(self):
-        print ("navigate_history")
-        # self.master.admin_patient_page.set_user_id(self.user_id)
-        # self.master.show_frame(self.master.admin_patient_page)
+        self.master.doctor_history.set_user_id(self.user_id)
+        self.master.show_frame(self.master.doctor_history)
     
     def navigate_profile(self):
         print ("navigate profile")
@@ -74,16 +72,6 @@ class DoctorDashboard(tk.Frame):
                     self.name = f"{firstname} {lastname}"
                 else:
                     messagebox.showerror("Error", "Invalid user.")
-                    return
-
-                query2 = "SELECT BranchNo FROM Doctor WHERE DoctorId = %s"
-                cursor.execute(query2, (self.user_id,))
-                result2 = cursor.fetchone()
-
-                if result2: 
-                    self.branch_no = result2[0]
-                else:
-                    messagebox.showerror("Error", "Doctor details not found.")
                     return
 
         except Exception as e:
@@ -173,7 +161,8 @@ class DoctorDashboard(tk.Frame):
                         DATE_FORMAT(bb.AppointmentHour, '%H:%i') AS AppointmentHour, 
                         bb.AppointmentStatus, 
                         bb.CheckUpType, 
-                        bb.ReasonOfVisit
+                        bb.ReasonOfVisit,
+                        p.DateOfBirth
                     FROM BranchBookings bb
                     JOIN `User` u ON bb.PatientId = u.UserId
                     LEFT JOIN Patient p ON bb.PatientId = p.PatientId
@@ -198,6 +187,7 @@ class DoctorDashboard(tk.Frame):
                         "status": row[9],
                         "check_type": row[10],
                         "reason": row[11] if row[11] else "N/A",
+                        "dob" : row[12]
                     }
                     self.patients.append(patient)
                 
@@ -230,12 +220,12 @@ class DoctorDashboard(tk.Frame):
                                      command=lambda: self.open_medical(patient['patient_id'], patient['name']))
             self.medical_btn.place(x=780, y=373, width=127, height=39)
 
-            text_desc = f'Patient Full Name : {patient["name"]} \nGender: {patient["gender"]} \nEmail: {patient["email"]} \
+            text_desc = f'Patient Full Name : {patient["name"]} \nGender: {patient["gender"]} \nDate of Birth: {patient["dob"]} \nEmail: {patient["email"]} \
             \nTelp: {patient["telp"]} \nDate: {patient["date"]} \nHour: {patient["hour"]} \nCheck Up Type: {patient["check_type"]}'
 
             self.desc_label = tk.Label(self, text=text_desc, font=("Poppins", 12),
                                 justify="left", fg=self.master.font_color2, bg='white')
-            self.desc_label.place(x=933, y=240)
+            self.desc_label.place(x=933, y=235)
             self.create_scrollable_reason(patient["reason"])
         
         else:

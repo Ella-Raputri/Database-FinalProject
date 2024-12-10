@@ -3,11 +3,11 @@ import mysql.connector
 def connect_to_db():
     try:
         connection = mysql.connector.connect(
-            host="localhost",        # Replace with your host
-            user="root",             # Replace with your username
-            password="Ella84712005#",  # Replace with your password
-            database="ClinicSystemDB",   # gk usah diubah
-            port=3306                # Default MySQL port
+            host="localhost",        
+            user="root",             
+            password="EllaTest2005",  
+            database="ClinicSystemDB",   
+            port=3306                
         )
         
         if connection.is_connected():
