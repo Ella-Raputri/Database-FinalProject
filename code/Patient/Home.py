@@ -1,14 +1,21 @@
 import tkinter as tk
 from tkinter import filedialog
+from tkinter import ttk, messagebox
 from PIL import Image, ImageTk
 import mysql.connector
-from db_connection import connect_to_db
 
 class PatientHome:
     def __init__(self, parent):
         self.frame = tk.Frame(parent, bg='white')
         self.frame.pack(fill='both', expand=True)
 
+        # Setup database connection
+        self.db_connection = mysql.connector.connect(
+            host="localhost",
+            user="root",
+            password="BinusSQL2005",  # Update with your MySQL password
+            database="ClinicSystemDB"
+        )
         self.cursor = self.db_connection.cursor()
 
         # Fetch patient data from the database
@@ -135,14 +142,14 @@ class PatientHome:
 
     def enable_edit(self, event):
         # Show the Entry widgets and make them editable
-        self.name2.place(x=300, y=300, width=300)
-        self.sex2.place(x=300, y=350, width=300)
-        self.dob2.place(x=300, y=400, width=300)
-        self.address2.place(x=300, y=450, width=300)
-        self.email2.place(x=300, y=500, width=300)
-        self.phone2.place(x=300, y=550, width=300)
-        self.emergency2.place(x=300, y=600, width=300)
-        self.insurance2.place(x=300, y=650, width=300)
+        self.name2.place(x=200, y=300, width=300)
+        self.sex2.place(x=170, y=350, width=300)
+        self.dob2.place(x=225, y=400, width=300)
+        self.address2.place(x=200, y=450, width=300)
+        self.email2.place(x=180, y=500, width=300)
+        self.phone2.place(x=245, y=550, width=300)
+        self.emergency2.place(x=210, y=600, width=300)
+        self.insurance2.place(x=200, y=650, width=300)
 
         # Enable the Entry widgets for editing
         self.name2.config(state='normal')
@@ -158,55 +165,62 @@ class PatientHome:
         self.save_button.place(x=600, y=280)
 
     def save_changes(self):
-        updated_name = self.name2.get()
-        name_parts = updated_name.split()  # Split the name into first and last name
+        try:
+            # Fetch updated values from entry fields
+            updated_name = self.name2.get().strip()
+            updated_sex = self.sex2.get().strip()
+            updated_dob = self.dob2.get().strip()
+            updated_address = self.address2.get().strip()
+            updated_email = self.email2.get().strip()
+            updated_phone = self.phone2.get().strip()
+            updated_emergency = self.emergency2.get().strip()
+            updated_insurance = self.insurance2.get().strip()
 
-        # Avoid index error in case the user only inputs a single name
-        if len(name_parts) == 1:
-            first_name = name_parts[0]
-            last_name = ""
-        else:
-            first_name = name_parts[0]
-            last_name = name_parts[1]
+            # Split full name into first and last names
+            name_parts = updated_name.split(maxsplit=1)
+            first_name = name_parts[0] if len(name_parts) > 0 else ""
+            last_name = name_parts[1] if len(name_parts) > 1 else ""
 
-        updated_email = self.email2.get()
-        updated_phone = self.phone2.get()
+            # Validate required fields
+            if not first_name or not updated_email:
+                messagebox.showerror("Error", "Full Name and Email cannot be empty!")
+                return
 
-        # Update the database with the new information
-        query = """
-            UPDATE `User` 
-            SET FirstName = %s, LastName = %s, Email = %s, PhoneNumber = %s 
-            WHERE UserId = %s
-        """
-        values = (first_name, last_name, updated_email, updated_phone, 'P001')  # Assuming UserId is 'P001'
+            # Update database with the new values
+            query = """
+                UPDATE `User`
+                SET FirstName = %s, LastName = %s, Sex = %s, DOB = %s, Address = %s,
+                    Email = %s, PhoneNumber = %s, EmergencyContact = %s, Insurance = %s
+                WHERE UserId = %s
+            """
+            values = (
+                first_name, last_name, updated_sex, updated_dob, updated_address,
+                updated_email, updated_phone, updated_emergency, updated_insurance, "P001"
+            )
+            self.cursor.execute(query, values)
+            self.db_connection.commit()
 
-        self.cursor.execute(query, values)
-        self.db_connection.commit()
+            # Update labels with the new values
+            self.name.config(text=f"Full Name: {updated_name}")
+            self.sex.config(text=f"Sex: {updated_sex}")
+            self.dob.config(text=f"Date Of Birth: {updated_dob}")
+            self.address.config(text=f"Address: {updated_address}")
+            self.email.config(text=f"Email: {updated_email}")
+            self.phone.config(text=f"Phone Number: {updated_phone}")
+            self.emergency.config(text=f"Emergency Contact: {updated_emergency}")
+            self.insurance.config(text=f"Insurance: {updated_insurance}")
 
-        # Update the labels with the new values
-        self.name.config(text=f"Full Name: {updated_name}")
-        self.email.config(text=f"Email: {updated_email}")
-        self.phone.config(text=f"Phone Number: {updated_phone}")
+            # Hide entry fields and show updated labels
+            for entry in [self.name2, self.sex2, self.dob2, self.address2, self.email2, self.phone2, self.emergency2,
+                          self.insurance2]:
+                entry.place_forget()
 
-        # Hide the Entry widgets
-        self.name2.place_forget()
-        self.sex2.place_forget()
-        self.dob2.place_forget()
-        self.address2.place_forget()
-        self.email2.place_forget()
-        self.phone2.place_forget()
-        self.emergency2.place_forget()
-        self.insurance2.place_forget()
+            self.save_button.place_forget()
+            self.edit_button.place(x=110, y=700)
 
-        # Show the labels again (now updated)
-        self.name.place(x=110, y=300)
-        self.sex.place(x=110, y=350)
-        self.dob.place(x=110, y=400)
-        self.address.place(x=110, y=450)
-        self.email.place(x=110, y=500)
-        self.phone.place(x=110, y=550)
-        self.emergency.place(x=110, y=600)
-        self.insurance.place(x=110, y=650)
+            messagebox.showinfo("Success", "Changes saved successfully!")
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to save changes: {e}")
 
         # Hide Save button
         self.save_button.place_forget()
@@ -217,7 +231,7 @@ class PatientHome:
         result = self.cursor.fetchone()
 
         if result:
-            first_name, last_name, email, phone = result
+            first_name, last_name, email, phone, sex, dob, address, emergency, insurance = result
             self.name.config(text=f"Full Name: {first_name} {last_name}")
             self.email.config(text=f"Email: {email}")
             self.phone.config(text=f"Phone Number: {phone}")
@@ -226,3 +240,4 @@ class PatientHome:
             self.address.config(text=f"Address: {address}")
             self.emergency.config(text=f"Emergency Contact: {emergency}")
             self.insurance.config(text=f"Insurance: {insurance}")
+

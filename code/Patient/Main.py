@@ -1,10 +1,25 @@
 import tkinter as tk
 from Booking import Booking
 from Home import PatientHome
-# from history import HistoryPage
 from PIL import Image, ImageTk
 import mysql.connector
-from db_connection import connect_to_db
+
+import mysql.connector
+
+# Connect to MySQL database
+def connect_to_db():
+    try:
+        db_connection = mysql.connector.connect(
+            host="localhost",  # or "127.0.0.1"
+            user="root",       # MySQL username
+            password="BinusSQL2005",  # Your MySQL password
+            database="ClinicSystemDB"  # The database name
+        )
+        return db_connection
+    except mysql.connector.Error as err:
+        print(f"Error: {err}")
+        return None
+
 
 class MainApp(tk.Tk):
     def __init__(self):
