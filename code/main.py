@@ -7,6 +7,7 @@ from Admin.admin_patient import AdminPatientPage
 from Admin.admin_booking import AdminBookingPage
 from Doctor.doctor_dashboard import DoctorDashboard
 from Doctor.history import DoctorHistory
+from Doctor.profile import DoctorProfile
 
 class App(tk.Tk):
     def __init__(self):
@@ -41,6 +42,7 @@ class App(tk.Tk):
         self.doctor_bg = '#F1F9FF'
         self.doctor_dashboard = DoctorDashboard(self)
         self.doctor_history = DoctorHistory(self)
+        self.doctor_profile = DoctorProfile(self)
 
         self.show_frame(self.login_page)
 

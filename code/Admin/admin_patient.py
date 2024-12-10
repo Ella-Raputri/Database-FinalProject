@@ -458,7 +458,7 @@ class AdminPatientPage(tk.Frame):
                 filetypes=[("Image Files", "*.png;*.jpg;*.jpeg")]
             )
             if file_path:
-                save_dir = "profile_pictures"
+                save_dir = "profile_pictures/patients"
                 if not os.path.exists(save_dir):
                     os.makedirs(save_dir)
                 
@@ -582,7 +582,7 @@ class AdminPatientPage(tk.Frame):
         self.address_entry.place(x=31, y=532)
 
         # Save Button
-        def save_doctor():
+        def save_patient():
             email = self.email_entry.get().strip()
             first_name = self.fname_entry.get().strip()
             last_name = self.lname_entry.get().strip()
@@ -595,7 +595,6 @@ class AdminPatientPage(tk.Frame):
             gender_val = self.gender_combobox.get().strip()
             city = self.city_entry.get().strip()
             profile_picture_path = getattr(self, "uploaded_file_path", None)
-            profile_picture_path = profile_picture_path or ""
 
             address = self.address_entry.get().strip()
 
@@ -668,7 +667,7 @@ class AdminPatientPage(tk.Frame):
                 self.create_table()
                 add_window.destroy()
 
-        save_button = tk.Button(add_window, text="Save", bg=self.master.bg_color1, fg='white', font=("Poppins", 16), bd=0, command=save_doctor)
+        save_button = tk.Button(add_window, text="Save", bg=self.master.bg_color1, fg='white', font=("Poppins", 16), bd=0, command=save_patient)
         save_button.place(x=826, y=623, width=110, height=45)
 
     def edit_patient(self):
@@ -694,7 +693,7 @@ class AdminPatientPage(tk.Frame):
                 filetypes=[("Image Files", "*.png;*.jpg;*.jpeg")]
             )
             if file_path:
-                save_dir = "profile_pictures"
+                save_dir = "profile_pictures/patients"
                 if not os.path.exists(save_dir):
                     os.makedirs(save_dir)
                 
@@ -873,13 +872,12 @@ class AdminPatientPage(tk.Frame):
             updated_city = self.city_entry.get().strip()
             updated_address = self.address_entry.get().strip()
             updated_profile_picture_path = getattr(self, "uploaded_file_path", None)
-            updated_profile_picture_path = updated_profile_picture_path or ""
 
             updated_gender = 0 if updated_gender_val == "Male" else 1            
 
             if not updated_email or not updated_password or not updated_conf_password or not updated_first_name \
                 or not updated_last_name or not updated_phone or not updated_dob or not updated_city \
-                or not updated_address or not updated_gender:
+                or not updated_address or updated_gender is None:
                 messagebox.showerror("Error", "All fields are required!")
                 return
             if not re.match(r'^[\w\.-]+@[\w\.-]+\.\w+$', updated_email):

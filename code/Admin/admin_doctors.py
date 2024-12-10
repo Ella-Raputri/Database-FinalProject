@@ -258,7 +258,7 @@ class AdminDoctorPage(tk.Frame):
                 filetypes=[("Image Files", "*.png;*.jpg;*.jpeg")]
             )
             if file_path:
-                save_dir = "profile_pictures"
+                save_dir = "profile_pictures/doctors"
                 if not os.path.exists(save_dir):
                     os.makedirs(save_dir)
                 
@@ -454,7 +454,6 @@ class AdminDoctorPage(tk.Frame):
             updated_address = self.address_entry.get().strip()
             updated_description = self.desc_entry.get().strip()
             updated_profile_picture_path = getattr(self, "uploaded_file_path", None)
-            updated_profile_picture_path = updated_profile_picture_path or ""
 
             updated_gender = 0 if updated_gender_val == "Male" else 1
 
@@ -463,9 +462,10 @@ class AdminDoctorPage(tk.Frame):
 
             if not updated_email or not updated_password or not updated_conf_password or not updated_first_name \
                 or not updated_last_name or not updated_phone or not updated_specialty_id or not updated_city \
-                or not updated_address or not updated_gender or not updated_description:
+                or not updated_address or updated_gender is None or not updated_description:
                 messagebox.showerror("Error", "All fields are required!")
                 return
+
             if not re.match(r'^[\w\.-]+@[\w\.-]+\.\w+$', updated_email):
                 messagebox.showerror("Error", "Invalid email format!")
                 return
@@ -574,7 +574,7 @@ class AdminDoctorPage(tk.Frame):
                 filetypes=[("Image Files", "*.png;*.jpg;*.jpeg")]
             )
             if file_path:
-                save_dir = "profile_pictures"
+                save_dir = "profile_pictures/doctors"
                 if not os.path.exists(save_dir):
                     os.makedirs(save_dir)
                 
@@ -722,7 +722,6 @@ class AdminDoctorPage(tk.Frame):
             gender_val = self.gender_combobox.get().strip()
             city = self.city_entry.get().strip()
             profile_picture_path = getattr(self, "uploaded_file_path", None)
-            profile_picture_path = profile_picture_path or ""
 
             address = self.address_entry.get().strip()
             description = self.desc_entry.get().strip()

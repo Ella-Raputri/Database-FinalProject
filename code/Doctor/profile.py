@@ -1,114 +1,93 @@
 import tkinter as tk
-from tkinter import ttk
-from tkinter import filedialog
+from tkinter import ttk, filedialog, messagebox
+from datetime import datetime
 from PIL import Image, ImageTk
+from connection import connect_to_db
 
-# Function to change profile picture
-def change_picture():
-    file_path = filedialog.askopenfilename(filetypes=[("Image Files", "*.png;*.jpg;*.jpeg")])
-    if file_path:
-        img = Image.open(file_path)
-        img = img.resize((100, 100))
-        profile_pic = ImageTk.PhotoImage(img)
-        profile_pic_label.config(image=profile_pic)
-        profile_pic_label.image = profile_pic  # Keep a reference to avoid garbage collection
+class DoctorProfile(tk.Frame):
+    def __init__(self, parent):
+        super().__init__(parent)
+        self.master = parent
+        self.user_id = None
+        self.email = None
+        self.name = None
 
-# Function to delete profile picture
-def delete_picture():
-    profile_pic_label.config(image=default_pic)
-    profile_pic_label.image = default_pic
+    def set_user_id(self, user_id):
+        self.user_id = user_id
+        self.create_widgets()
+    
+    def create_navbar(self):      
+        # home
+        self.home_btn = tk.Button(self, text="Home", bd=0, bg='#69C6F7', fg="white", 
+                                  font=("Poppins Semibold", 18),
+                                    command=self.navigate_home)
+        self.home_btn.place(x=0, y=119, width=213, height=52)
+        self.home_icon = tk.PhotoImage(file='images/home_icon.png')  
+        home_label = tk.Label(self, image=self.home_icon, bd=0, bg='#69C6F7')  
+        home_label.place(x=25, y=130)
 
-# Main window
-root = tk.Tk()
-root.title("Profile Settings")
-root.geometry("900x600")
-root.configure(bg="#E8F5FE")
+        # history
+        self.history_btn = tk.Button(self, text="History", bd=0,bg='#64C1F6', fg="white", 
+                                    font=("Poppins Semibold", 18),
+                                    command=self.navigate_history)
+        self.history_btn.place(x=0, y=186,  width=213, height=52)
+        self.history_icon = tk.PhotoImage(file='images/history_icon.png')  
+        history_label = tk.Label(self, image=self.history_icon, bd=0, bg='#64C1F6')  
+        history_label.place(x=23, y=198)
 
-# Sidebar
-sidebar = tk.Frame(root, bg="#0078D7", width=200)
-sidebar.pack(side="left", fill="y")
+        # profile
+        self.profile_btn = tk.Button(self, text="Profile", bd=0,bg=self.master.bg_color1, fg="white", 
+                                     font=("Poppins Semibold", 18))
+        self.profile_btn.place(x=0, y=246, width=213, height=52)
+        self.profile_icon = tk.PhotoImage(file='images/doctor_icon.png')  
+        profile_label = tk.Label(self, image=self.profile_icon, bd=0, bg=self.master.bg_color1)  
+        profile_label.place(x=23, y=257)
 
-sidebar_title = tk.Label(sidebar, text="Clinic Box", bg="#0078D7", fg="white", font=("Arial", 18, "bold"))
-sidebar_title.pack(pady=20)
+    def navigate_home(self):
+        self.master.doctor_dashboard.set_user_id(self.user_id)
+        self.master.show_frame(self.master.doctor_dashboard)
+    
+    def navigate_history(self):
+        self.master.doctor_history.set_user_id(self.user_id)
+        self.master.show_frame(self.master.doctor_history)
 
-menu_items = [("Home", "🏠"), ("History", "🔄"), ("Profile", "👤")]
-for item, icon in menu_items:
-    menu_button = tk.Button(
-        sidebar, text=f"{icon} {item}", bg="#0078D7", fg="white", font=("Arial", 14),
-        bd=0, anchor="w", padx=20, relief="flat", activebackground="#005A9E"
-    )
-    menu_button.pack(fill="x", pady=5)
+    def get_user_info(self):
+        try:
+            conn = connect_to_db()
+            with conn.cursor() as cursor:  
+                query1 = "SELECT Email, FirstName, LastName FROM User WHERE UserId = %s"
+                cursor.execute(query1, (self.user_id,))
+                result = cursor.fetchone()
+                
+                if result:  
+                    self.email, firstname, lastname = result
+                    self.name = f"{firstname} {lastname}"
+                else:
+                    messagebox.showerror("Error", "Invalid user.")
+                    return
 
-# Content Area
-content = tk.Frame(root, bg="#E8F5FE")
-content.pack(side="right", fill="both", expand=True, padx=20, pady=20)
+        except Exception as e:
+            messagebox.showerror("Error", f"An error occurred: {e}")
+        finally:
+            if conn:
+                conn.close()
 
-title_label = tk.Label(content, text="Settings", bg="#E8F5FE", fg="black", font=("Arial", 24, "bold"))
-title_label.grid(row=0, column=0, columnspan=2, pady=10, sticky="w")
+    def create_widgets(self):        
+        self.get_user_info()
+        # background
+        self.background_photo = tk.PhotoImage(file='images/doctor_default.png')  
+        background_label = tk.Label(self, image=self.background_photo)  
+        background_label.place(x=0, y=0, relwidth=1, relheight=1)
 
-# Profile Picture Section
-profile_pic_frame = tk.Frame(content, bg="#E8F5FE")
-profile_pic_frame.grid(row=1, column=0, sticky="w", padx=10, pady=10)
+        self.create_navbar()
+        # title
+        title_label = tk.Label(self, text=f"Profile", font=("Poppins", 36, "bold"), fg='black', bg=self.master.doctor_bg)
+        title_label.place(x=261, y=28)
 
-default_pic = ImageTk.PhotoImage(Image.open("fa6-solid--user-doctor.png").resize((100, 100)))  # Replace with your image path
-profile_pic_label = tk.Label(profile_pic_frame, image=default_pic, bg="#E8F5FE")
-profile_pic_label.image = default_pic
-profile_pic_label.pack()
+        # name login
+        name_label = tk.Label(self, text=self.name, font=("Poppins", 16), fg=self.master.font_color3, bg=self.master.doctor_bg)
+        name_label.place(x=-10, y=9, relx=1.0, anchor='ne')
 
-change_pic_btn = tk.Button(profile_pic_frame, text="Change Picture", bg="#0078D7", fg="white", font=("Arial", 12),
-                           command=change_picture)
-change_pic_btn.pack(pady=5)
-
-delete_pic_btn = tk.Button(profile_pic_frame, text="Delete Picture", bg="#E8F5FE", font=("Arial", 12),
-                           command=delete_picture)
-delete_pic_btn.pack(pady=5)
-
-# Input Fields
-fields = [
-    ("First Name", ""), ("Last Name", ""), ("Phone Number", ""),
-    ("Date of Birth", ""), ("City", ""), ("Address Details", "")
-]
-
-for idx, (label_text, _) in enumerate(fields):
-    label = tk.Label(content, text=label_text, bg="#E8F5FE", font=("Arial", 14))
-    label.grid(row=idx + 2, column=0, sticky="w", padx=10, pady=5)
-    entry = ttk.Entry(content, width=30)
-    entry.grid(row=idx + 2, column=1, sticky="w", padx=10, pady=5)
-
-# Specialties and Description
-specialties_label = tk.Label(content, text="Specialties", bg="#E8F5FE", font=("Arial", 14))
-specialties_label.grid(row=8, column=0, sticky="nw", padx=10, pady=10)
-specialties_text = tk.Text(content, height=2, width=40)
-specialties_text.grid(row=8, column=1, sticky="w", padx=10, pady=10)
-
-description_label = tk.Label(content, text="Description", bg="#E8F5FE", font=("Arial", 14))
-description_label.grid(row=9, column=0, sticky="nw", padx=10, pady=10)
-description_text = tk.Text(content, height=5, width=40)
-description_text.grid(row=9, column=1, sticky="w", padx=10, pady=10)
-
-# Doctor's Name and Email (Top Right)
-doctor_info = tk.Frame(content, bg="#E8F5FE")
-doctor_info.grid(row=0, column=1, sticky="e", padx=20)
-
-doctor_name_label = tk.Label(doctor_info, text="Name", bg="#E8F5FE", font=("Arial", 14, "bold"))
-doctor_name_label.pack(anchor="e")
-doctor_email_label = tk.Label(doctor_info, text="Email: raaa@mail.com", bg="#E8F5FE", font=("Arial", 12))
-doctor_email_label.pack(anchor="e")
-
-# Run the application
-root.mainloop()
-
-
-def change_picture(self):
-    file_path = filedialog.askopenfilename(filetypes=[("Image Files", "*.png;*.jpg;*.jpeg")])
-    if file_path:
-        img = Image.open(file_path)
-        img = img.resize((100, 100))
-        self.profile_pic = ImageTk.PhotoImage(img)
-        self.profile_pic_label.config(image=self.profile_pic)
-        self.profile_pic_label.image = self.profile_pic  # Keep reference
-
-def delete_picture(self):
-    self.profile_pic_label.config(image=self.default_pic)
-    self.profile_pic_label.image = self.default_pic
-
+        # email login
+        email_label = tk.Label(self, text=f"Email: {self.email}", font=("Poppins", 12), fg=self.master.font_color3, bg=self.master.doctor_bg)
+        email_label.place(x=-10, y=39, relx=1.0, anchor='ne')

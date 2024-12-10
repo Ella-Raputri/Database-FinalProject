@@ -55,9 +55,8 @@ class DoctorDashboard(tk.Frame):
         self.master.show_frame(self.master.doctor_history)
     
     def navigate_profile(self):
-        print ("navigate profile")
-        # self.master.admin_booking_page.set_user_id(self.user_id)
-        # self.master.show_frame(self.master.admin_booking_page)
+        self.master.doctor_profile.set_user_id(self.user_id)
+        self.master.show_frame(self.master.doctor_profile)
 
     def get_user_info(self):
         try:
