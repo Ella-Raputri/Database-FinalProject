@@ -56,14 +56,12 @@ class PatientHome(tk.Frame):
         history_label.place(x=26, y=257)
 
     def navigate_history(self):
-        print('historyy')
-        # self.master.doctor_history.set_user_id(self.user_id)
-        # self.master.show_frame(self.master.doctor_history)
+        self.master.patient_history.set_user_id(self.user_id)
+        self.master.show_frame(self.master.patient_history)
     
     def navigate_booking(self):
-        print('booking')
-        # self.master.doctor_profile.set_user_id(self.user_id)
-        # self.master.show_frame(self.master.doctor_profile)
+        self.master.patient_booking.set_user_id(self.user_id)
+        self.master.show_frame(self.master.patient_booking)
 
     def get_user_info(self):
         try:

@@ -9,6 +9,8 @@ from Doctor.doctor_dashboard import DoctorDashboard
 from Doctor.history import DoctorHistory
 from Doctor.profile import DoctorProfile
 from Patient.patient_home import PatientHome
+from Patient.patient_booking import PatientBooking
+from Patient.patient_history import PatientHistory
 
 class App(tk.Tk):
     def __init__(self):
@@ -47,6 +49,8 @@ class App(tk.Tk):
 
         # patient
         self.patient_home = PatientHome(self)
+        self.patient_booking = PatientBooking(self)
+        self.patient_history = PatientHistory(self)
 
         self.show_frame(self.login_page)
 
