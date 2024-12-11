@@ -8,6 +8,7 @@ from Admin.admin_booking import AdminBookingPage
 from Doctor.doctor_dashboard import DoctorDashboard
 from Doctor.history import DoctorHistory
 from Doctor.profile import DoctorProfile
+from Patient.patient_home import PatientHome
 
 class App(tk.Tk):
     def __init__(self):
@@ -44,10 +45,15 @@ class App(tk.Tk):
         self.doctor_history = DoctorHistory(self)
         self.doctor_profile = DoctorProfile(self)
 
+        # patient
+        self.patient_home = PatientHome(self)
+
         self.show_frame(self.login_page)
 
     # user1@example.com
     # doctor4@example.com
+    # pat1@mail.com
+    # pat2@example.com
 
     def center_window(self):
         screen_width = self.winfo_screenwidth()

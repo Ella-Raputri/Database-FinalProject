@@ -5,7 +5,7 @@ def connect_to_db():
         connection = mysql.connector.connect(
             host="localhost",        
             user="root",             
-            password="EllaTest2005",  
+            password="Ella84712005#",  
             database="ClinicSystemDB",   
             port=3306                
         )

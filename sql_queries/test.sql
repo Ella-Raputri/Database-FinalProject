@@ -58,13 +58,13 @@ USE ClinicSystemDB;
 
 USE ClinicSystemDB;
 
-select * from user where userid like '%doc%';
-select count(*) from doctor where ProfilePicture is null;
-select count(*) from patient where ProfilePicture is null;
+select * from user where userid like '%pat%';
 select * from patient ;
-select * from doctorschedule where doctorid = 'DOC0000004';
-SELECT CONCAT(SpecialtyId, ': ', SpecialtyName) FROM Specialty;
+SELECT ProfilePicture, DATE_FORMAT(DateOfBirth, '%Y-%m-%d') AS formatted_dob FROM Patient WHERE PatientId = 'PAT0000001';
+select patientid from medicalhistory group by patientid order by counts desc limit 1;
 
+select * from branchbookings WHERE patientId = 'PAT0000002';
+SELECT Email, FirstName, LastName, Gender, PhoneNumber, City, AddressDetail FROM User WHERE UserId = 'PAT0000002';
 -- SET SQL_SAFE_UPDATES = 0;
 -- UPDATE Doctor d
 -- JOIN `User` u ON d.DoctorId = u.UserId
@@ -117,8 +117,8 @@ WHERE m.PatientId = 'PAT0000003'
 ORDER BY m.Status ASC;
 
 SELECT 
-    COUNT(BookingId) FROM BranchBookings 
-WHERE DoctorId = 'DOC0000004' AND AppointmentDate = CURDATE();
+    * FROM BranchBookings 
+WHERE AppointmentDate >= CURDATE() order by patientId ;
 
 SELECT
 	d.ProfilePicture, d.SpecialtyId, s.SpecialtyName

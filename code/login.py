@@ -115,6 +115,10 @@ class LoginPage(tk.Frame):
                 if role_name == 'Doctor':
                     self.master.doctor_dashboard.set_user_id(user_id)
                     self.master.show_frame(self.master.doctor_dashboard)
+                
+                if role_name == 'Patient':
+                    self.master.patient_home.set_user_id(user_id)
+                    self.master.show_frame(self.master.patient_home)
             else:
                 messagebox.showerror("Error", "Invalid email or password!")
         except Exception as e:

@@ -121,8 +121,8 @@ class DoctorProfile(tk.Frame):
         title_label.place(x=290, y=28)
 
         # name login
-        name_label = tk.Label(self, text=f'{self.fname} {self.lname}', font=("Poppins", 16), fg=self.master.font_color3, bg=self.master.doctor_bg)
-        name_label.place(x=-10, y=9, relx=1.0, anchor='ne')
+        self.name_label = tk.Label(self, text=f'{self.fname} {self.lname}', font=("Poppins", 16), fg=self.master.font_color3, bg=self.master.doctor_bg)
+        self.name_label.place(x=-10, y=9, relx=1.0, anchor='ne')
 
         # email login
         email_label = tk.Label(self, text=f"Email: {self.email}", font=("Poppins", 12), fg=self.master.font_color3, bg=self.master.doctor_bg)
@@ -556,6 +556,8 @@ class DoctorProfile(tk.Frame):
         self.city_entry.config(state=tk.DISABLED)
         self.address_entry.config(state=tk.DISABLED)
         self.ok_btn.config(state=tk.DISABLED)
+
+        self.name_label.config(text=f'{self.fname} {self.lname}')
         
         self.edit_inputs_btn.config(state=tk.NORMAL)
 
