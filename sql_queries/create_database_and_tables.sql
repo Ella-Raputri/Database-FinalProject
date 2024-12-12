@@ -137,6 +137,3 @@ WHERE
 
 -- commit;
 -- rollback;
-
-
-select coun

@@ -34,7 +34,7 @@ class PatientHistory(tk.Frame):
         self.booking_btn = tk.Button(self, text="    Booking", bd=0,bg='#64C1F6', fg="white", 
                                     font=("Poppins Semibold", 18),
                                     command=self.navigate_booking)
-        self.booking_btn.place(x=0, y=186,  width=213, height=52)
+        self.booking_btn.place(x=0, y=186,  width=226, height=52)
         self.booking_icon = tk.PhotoImage(file='images/pat_booking_icon.png')  
         booking_label = tk.Label(self, image=self.booking_icon, bd=0, bg='#64C1F6')  
         booking_label.place(x=23, y=195)
@@ -42,7 +42,7 @@ class PatientHistory(tk.Frame):
         # history
         self.history_btn = tk.Button(self, text="  History", bd=0,bg=self.master.bg_color1, fg="white", 
                                      font=("Poppins Semibold", 18))
-        self.history_btn.place(x=0, y=246, width=213, height=52)
+        self.history_btn.place(x=0, y=246, width=226, height=52)
         self.history_icon = tk.PhotoImage(file='images/history_icon.png')  
         history_label = tk.Label(self, image=self.history_icon, bd=0, bg=self.master.bg_color1)  
         history_label.place(x=26, y=257)

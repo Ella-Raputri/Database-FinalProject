@@ -1,7 +1,7 @@
 import tkinter as tk
 from tkinter import font
 
-def calculate_entry_width_in_columns(pixel_width, font_name="Poppins", font_size=14):
+def calculate_entry_width_in_columns(pixel_width, font_name="Poppins", font_size=16):
     # Create a temporary root to measure font dimensions
     root = tk.Tk()
     root.withdraw()  # Hide the main window
@@ -19,6 +19,6 @@ def calculate_entry_width_in_columns(pixel_width, font_name="Poppins", font_size
     return int(columns)
 
 # Example usage
-desired_pixel_width = 200  # Target width in pixels
+desired_pixel_width = 396  # Target width in pixels
 calculated_columns = calculate_entry_width_in_columns(desired_pixel_width)
 print(calculated_columns)
