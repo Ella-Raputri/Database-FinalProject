@@ -155,7 +155,10 @@ class DoctorHistory(tk.Frame):
                         DATE_FORMAT(bb.AppointmentDate, '%Y-%m-%d') AS AppointmentDate, 
                         DATE_FORMAT(bb.AppointmentHour, '%H:%i') AS AppointmentHour,
                         bb.PatientName,
-                        u.Gender,
+                        CASE u.Gender 
+                            WHEN 0 THEN 'Male'
+                            ELSE 'Female'
+                        END AS Gender,
                         p.DateOfBirth,
                         u.Email,
                         u.PhoneNumber,  

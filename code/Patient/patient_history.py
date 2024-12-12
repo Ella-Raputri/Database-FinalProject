@@ -13,6 +13,10 @@ class PatientHistory(tk.Frame):
         self.email = None
         self.name = None
 
+        self.filter_field = "CONCAT(AppointmentDate, ' ', STR_TO_DATE(bb.AppointmentHour, '%H:%i'))"
+        self.sort_order = 'ASC'
+        self.table_data = []
+
     def set_user_id(self, user_id):
         self.user_id = user_id
         self.create_widgets()
@@ -91,3 +95,111 @@ class PatientHistory(tk.Frame):
         # email login
         self.email_label = tk.Label(self, text=f"Email: {self.email}", font=("Poppins", 12), fg=self.master.font_color3, bg='white')
         self.email_label.place(x=-10, y=39, relx=1.0, anchor='ne')
+
+        # filter dropdown
+        def on_select(event):
+            selected_option = combo.get()
+            if selected_option == 'Date & Hour': selected_option = "CONCAT(AppointmentDate, ' ', STR_TO_DATE(bb.AppointmentHour, '%H:%i'))"
+            elif selected_option == 'Name': selected_option = 'bb.DoctorName'
+            elif selected_option == 'Branch Name': selected_option = 'br.BranchName'
+            elif selected_option == 'Status': selected_option = 'bb.AppointmentStatus'            
+            
+            self.filter_field = selected_option  
+            self.create_table()
+
+        options = ["Date & Hour", "Name", "Branch Name", "Status"]
+        combo = ttk.Combobox(self, values=options, font=("Poppins", 12), state='readonly')
+        combo.set("Filter")
+        combo.place(x=1214, y=112, width=135, height=42)
+        combo.bind("<<ComboboxSelected>>", on_select)
+
+        self.sort_img = tk.PhotoImage(file='images/sort_ascending.png')  
+        sort_icon = tk.Label(self, image=self.sort_img, bg='white')
+        sort_icon.place(x=1182, y=124)
+
+        def toggle_sort():
+            if self.sort_order == 'ASC':
+                self.sort_order = 'DESC'
+                self.sort_img = tk.PhotoImage(file='images/sort_descending.png')
+            else:
+                self.sort_order = 'ASC'
+                self.sort_img = tk.PhotoImage(file='images/sort_ascending.png')
+            sort_icon.config(image=self.sort_img)
+            self.create_table() 
+
+        sort_icon.bind("<Button-1>", lambda e: toggle_sort()) 
+        self.create_table()
+    
+    def get_table_data(self):
+        try:
+            conn = connect_to_db()
+            with conn.cursor() as cursor:  
+                query1 = f"""
+                    SELECT  
+                        bb.DoctorId,
+                        DATE_FORMAT(bb.AppointmentDate, '%Y-%m-%d') AS AppointmentDate, 
+                        DATE_FORMAT(bb.AppointmentHour, '%H:%i') AS AppointmentHour,
+                        bb.DoctorName,
+                        CASE u.Gender 
+                            WHEN 0 THEN 'Male'
+                            ELSE 'Female'
+                        END AS Gender,
+                        s.SpecialtyName, 
+                        br.BranchName,
+                        bb.AppointmentStatus, 
+                        bb.CheckUpType, 
+                        bb.ReasonOfVisit
+                    FROM BranchBookings bb
+                    JOIN `User` u ON bb.DoctorId = u.UserId
+                    LEFT JOIN Doctor d ON bb.DoctorId = d.DoctorId
+                    LEFT JOIN Specialty s ON d.SpecialtyId = s.SpecialtyId
+                    LEFT JOIN ClinicBranch br ON d.BranchNo = br.BranchNo
+                    WHERE bb.PatientId = %s
+                    ORDER BY
+                        {self.filter_field} {self.sort_order};                
+                """
+                cursor.execute(query1, (self.user_id,))
+                result = cursor.fetchall()
+                self.table_data = result  
+        except Exception as e:
+            messagebox.showerror("Error", f"An error occurred: {e}")
+            return []
+        finally:
+            if conn:
+                conn.close()
+        
+    def create_table(self):
+        self.get_table_data()
+
+        style = ttk.Style()
+        style.configure("Treeview.Heading", font=("Poppins Semibold", 14))
+        style.configure("Treeview", rowheight=40, font=("Poppins", 12))
+
+        table_frame = tk.Frame(self)
+        table_frame.place(x=248, y=114, width=900, height=610)
+
+        columns = ['Appointment Date','Appointment Hour','Doctor Name', 'Gender', 'Specialty',
+                'Branch Name', 'Status', 'Check-Up Type', 'Reason of Visit']  
+        self.table = ttk.Treeview(table_frame, columns=columns, show="headings", height=10)
+
+        for col in columns:
+            self.table.heading(col, text=col)
+            self.table.column(col, width=210, anchor=tk.CENTER)
+
+        for i, row in enumerate(self.table_data):
+            display_row = row[1:]
+            tags = "odd_row" if i % 2 == 0 else "even_row"
+            item_id = self.table.insert("", tk.END, values=display_row, tags=(tags,))
+        
+        self.table.tag_configure("odd_row", background="#f2f7fd", font=("Poppins", 12))
+        self.table.tag_configure("even_row", background="white", font=("Poppins", 12))
+
+        v_scroll = ttk.Scrollbar(table_frame, orient=tk.VERTICAL, command=self.table.yview)
+        v_scroll.pack(side=tk.RIGHT, fill=tk.Y)
+
+        h_scroll = ttk.Scrollbar(table_frame, orient=tk.HORIZONTAL, command=self.table.xview)
+        h_scroll.pack(side=tk.BOTTOM, fill=tk.X)
+
+        self.table.configure(yscrollcommand=v_scroll.set, xscrollcommand=h_scroll.set)
+        self.table.pack(fill=tk.BOTH, expand=True)
+        # self.table.bind("<<TreeviewSelect>>", lambda event: self.update_medical_panel(event))

@@ -85,25 +85,29 @@ SELECT Email, FirstName, LastName, Gender, PhoneNumber, City, AddressDetail FROM
 -- WHERE u.RoleName = 'Patient';
 -- SET SQL_SAFE_UPDATES = 1;
 
-select * from branchbookings where appointmentstatus = 'Cancelled' order by bookingid desc;
+-- select * from branchbookings where appointmentstatus = 'Cancelled' order by bookingid desc;
 SELECT 
 	bb.BookingId, 
-	bb.PatientId, 
-	bb.PatientName,
-	u.Gender,
-    p.DateOfBirth,
-    u.Email,
-	u.PhoneNumber, 
+	bb.DoctorId, 
 	DATE_FORMAT(bb.AppointmentDate, '%Y-%m-%d') AS AppointmentDate, 
-	DATE_FORMAT(bb.AppointmentHour, '%H:%i') AS AppointmentHour, 
+	DATE_FORMAT(bb.AppointmentHour, '%H:%i') AS AppointmentHour,
+	bb.DoctorName,
+	u.Gender,
+	s.SpecialtyName, 
+    br.BranchName,
 	bb.AppointmentStatus, 
 	bb.CheckUpType, 
 	bb.ReasonOfVisit
 FROM BranchBookings bb
-JOIN `User` u ON bb.PatientId = u.UserId
-LEFT JOIN Patient p ON bb.PatientId = p.PatientId
-WHERE bb.DoctorId = 'DOC0000004'
-ORDER BY bb.AppointmentDate ASC, STR_TO_DATE(bb.AppointmentHour, '%H:%i') ASC;
+JOIN `User` u ON bb.DoctorId = u.UserId
+LEFT JOIN Doctor d ON bb.DoctorId = d.DoctorId
+LEFT JOIN Specialty s ON d.SpecialtyId = s.SpecialtyId
+LEFT JOIN ClinicBranch br ON d.BranchNo = br.BranchNo
+WHERE bb.PatientId = 'PAT0000003'
+ORDER BY 
+	CONCAT(AppointmentDate, ' ', STR_TO_DATE(bb.AppointmentHour, '%H:%i')) ASC; 
+
+select count(bookingid) from branchbookings where patientid = 'PAT0000003';
 
 SELECT 
 d.DiseaseName,  
