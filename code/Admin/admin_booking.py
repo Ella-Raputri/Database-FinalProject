@@ -423,6 +423,29 @@ class AdminBookingPage(tk.Frame):
             if not self.validate_date_and_hour(dates, hour, day_of_week, start_hour, end_hour):
                 messagebox.showerror("Error", "Date or hour is not valid!")
                 return
+            
+            try:
+                query = """
+                SELECT COUNT(BookingId) FROM Booking WHERE DoctorId = %s AND AppointmentDate = %s 
+                AND AppointmentHour BETWEEN %s AND %s;
+                """
+                conn = connect_to_db()
+                with conn.cursor() as cursor:
+                    cursor.execute(query, (doctor_id, dates, start_hour, end_hour))
+                    result = cursor.fetchone()
+                    bookings_count = result[0] if result else 0
+
+                start_time_obj = datetime.strptime(start_hour, "%H:%M")
+                end_time_obj = datetime.strptime(end_hour, "%H:%M")
+                time_difference = end_time_obj - start_time_obj
+                hours = time_difference.total_seconds() / 3600
+
+                if bookings_count >= hours*4:
+                    messagebox.showwarning("Booking Limit Exceeded", "This doctor is already full at this time.")
+                    return
+            except Exception as e:
+                messagebox.showwarning("Error", f"An error occurred while checking the bookings: {e}")
+                return
 
             try:
                 conn = connect_to_db()
@@ -607,6 +630,29 @@ class AdminBookingPage(tk.Frame):
                 return
             if not self.validate_date_and_hour(dates, hour, day_of_week, start_hour, end_hour):
                 messagebox.showerror("Error", "Date or hour is not valid!")
+                return
+            
+            try:
+                query = """
+                SELECT COUNT(BookingId) FROM Booking WHERE DoctorId = %s AND AppointmentDate = %s 
+                AND AppointmentHour BETWEEN %s AND %s;
+                """
+                conn = connect_to_db()
+                with conn.cursor() as cursor:
+                    cursor.execute(query, (doctor_id, dates, start_hour, end_hour))
+                    result = cursor.fetchone()
+                    bookings_count = result[0] if result else 0
+
+                start_time_obj = datetime.strptime(start_hour, "%H:%M")
+                end_time_obj = datetime.strptime(end_hour, "%H:%M")
+                time_difference = end_time_obj - start_time_obj
+                hours = time_difference.total_seconds() / 3600
+
+                if bookings_count >= hours*4:
+                    messagebox.showwarning("Booking Limit Exceeded", "This doctor is already full at this time.")
+                    return
+            except Exception as e:
+                messagebox.showwarning("Error", f"An error occurred while checking the bookings: {e}")
                 return
 
             try:

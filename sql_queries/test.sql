@@ -107,7 +107,14 @@ WHERE bb.PatientId = 'PAT0000003'
 ORDER BY 
 	CONCAT(AppointmentDate, ' ', STR_TO_DATE(bb.AppointmentHour, '%H:%i')) ASC; 
 
-select count(bookingid) from branchbookings where patientid = 'PAT0000003';
+-- SELECT d.DoctorId, d.ProfilePicture, d.Description, s.SpecialtyName, u.FirstName, u.LastName, cb.BranchName
+--         FROM Doctor d
+--         JOIN Specialty s ON d.SpecialtyId = s.SpecialtyId
+--         JOIN `User` u ON d.DoctorId = u.UserId
+--         JOIN ClinicBranch cb ON d.BranchNo = cb.BranchNo
+--         WHERE u.IsDeleted = 0;
+
+SELECT * FROM Booking WHERE DoctorId = 'DOC0000002';
 
 SELECT 
 d.DiseaseName,  
