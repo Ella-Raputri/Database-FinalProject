@@ -12,7 +12,9 @@ class DoctorDashboard(tk.Frame):
         self.email = None
         self.name = None
         self.default_pic = ImageTk.PhotoImage(Image.open("images/default_profile.png").resize((100, 100)))
-        
+        self.cancel_pic = ImageTk.PhotoImage(Image.open("images/cancel_icon.png"))
+        self.complete_pic = ImageTk.PhotoImage(Image.open("images/completed_icon.png"))
+
         # patient
         self.profile_pic = self.default_pic
         self.current_patient_index = 0
@@ -206,13 +208,22 @@ class DoctorDashboard(tk.Frame):
                 self.desc_label.destroy()
 
             patient = self.patients[self.current_patient_index]
+            # print(patient['profile_pic'])
             
-            if(patient["profile_pic"]):
-                img = Image.open(patient["profile_pic"])
-                img = img.resize((90, 90), Image.Resampling.LANCZOS)
-                self.profile_pic = ImageTk.PhotoImage(img)
-                self.profile_pic_label.config(image=self.profile_pic)
-                self.profile_pic_label.image = self.profile_pic
+            if patient["profile_pic"]:
+                try:
+                    img = Image.open(patient["profile_pic"])
+                    img = img.resize((90, 90), Image.Resampling.LANCZOS)
+                    self.profile_pic = ImageTk.PhotoImage(img)
+                    self.profile_pic_label.config(image=self.profile_pic)
+                    self.profile_pic_label.image = self.profile_pic
+                except Exception as e:
+                    print(f"Error loading profile picture: {e}")
+                    self.profile_pic_label.config(image=self.default_pic)
+                    self.profile_pic_label.image = self.default_pic
+            else:
+                self.profile_pic_label.config(image=self.default_pic)
+                self.profile_pic_label.image = self.default_pic
             
             self.medical_btn = tk.Button(self, text='Medical History', bg=self.master.bg_color1,
                                      fg='white', font=('Poppins', 12), bd=0, 
@@ -226,7 +237,14 @@ class DoctorDashboard(tk.Frame):
                                 justify="left", fg=self.master.font_color2, bg='white')
             self.desc_label.place(x=933, y=235)
             self.create_scrollable_reason(patient["reason"])
-        
+
+            self.cancel_button = tk.Label(self, image=self.cancel_pic, bd=0, highlightthickness=0, bg='white')
+            self.cancel_button.bind("<Button-1>", lambda event, id=patient["booking_id"], status='Cancelled': self.update_status_booking(id, status))
+            self.cancel_button.place(x=1267, y=186)
+
+            self.complete_button = tk.Label(self, image=self.complete_pic, bd=0, highlightthickness=0, bg='white')
+            self.complete_button.bind("<Button-1>", lambda event, id=patient["booking_id"], status='Completed': self.update_status_booking(id, status))
+            self.complete_button.place(x=1226, y=186)
         else:
             desc_label = tk.Label(self, text='No patients available', font=("Poppins", 16),
                                 fg=self.master.font_color2, bg='white')
@@ -313,6 +331,30 @@ class DoctorDashboard(tk.Frame):
                                 fg="white", command=child_window.destroy)
         ok_button.place(x=206, y=615, width=116, height=40)
         child_window.resizable(False, False)
+
+    def update_status_booking(self, booking_id, status):
+        try:
+            print('bookingid ', booking_id)
+            conn = connect_to_db()
+            cursor = conn.cursor()
+
+            query = """
+                UPDATE Booking 
+                SET AppointmentStatus = %s
+                WHERE BookingId = %s
+            """
+            cursor.execute(query, (status, booking_id))
+            conn.commit()
+
+            messagebox.showinfo("Success", "Booking updated successfully!")
+
+        except Exception as e:
+            print(f"Error occurred: {e}")
+            messagebox.showerror("Error", f"Failed to update booking: {e}")
+        finally:
+            if conn:
+                conn.close()
+            self.fetch_patients()
 
     def create_patient_view(self):
         # patient view

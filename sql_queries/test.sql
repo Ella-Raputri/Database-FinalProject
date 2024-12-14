@@ -114,7 +114,7 @@ ORDER BY
 --         JOIN ClinicBranch cb ON d.BranchNo = cb.BranchNo
 --         WHERE u.IsDeleted = 0;
 
-SELECT * FROM Booking WHERE DoctorId = 'DOC0000002';
+SELECT * FROM Booking WHERE DoctorId = 'DOC0000004';
 
 SELECT 
 d.DiseaseName,  

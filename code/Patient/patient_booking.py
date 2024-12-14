@@ -367,7 +367,12 @@ class PatientBooking(tk.Frame):
                 return
             
             try:
-                valid_date = datetime.strptime(appointment_date, '%Y-%m-%d')
+                valid_date = datetime.strptime(appointment_date, '%Y-%m-%d').date()
+                today_date = datetime.today().date()
+                if valid_date < today_date:
+                    messagebox.showwarning("Date Error", "The appointment date cannot be in the past.")
+                    return
+
             except ValueError:
                 messagebox.showwarning("Date Error", "Please enter a valid date in the format YYYY-MM-DD.")
                 return
