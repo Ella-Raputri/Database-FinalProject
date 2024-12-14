@@ -307,12 +307,12 @@ class AdminDoctorPage(tk.Frame):
         gender_str = "Male" if gender == 0 else "Female"
 
         edit_window = tk.Toplevel(self)
-        edit_window.title("Add New Doctor")
+        edit_window.title("Edit Doctor")
         edit_window.geometry("1011x699")
         edit_window.configure(bg="white")
 
         # Title
-        title_label = tk.Label(edit_window, text="Add Doctor", font=("Poppins", 32, "bold"), fg=self.master.font_color1, bg='white')
+        title_label = tk.Label(edit_window, text="Edit Doctor", font=("Poppins", 32, "bold"), fg=self.master.font_color1, bg='white')
         title_label.place(x=31, y=16)
 
         # Email

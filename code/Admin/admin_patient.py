@@ -1291,7 +1291,7 @@ class AdminPatientPage(tk.Frame):
 
     def edit_medhist(self, curr_disease, curr_status, mhwindow):
         edit_window = tk.Toplevel(self)
-        edit_window.title("Edit Schedule")
+        edit_window.title("Edit Medical History")
         edit_window.geometry("500x300")
         edit_window.configure(bg="white")
 

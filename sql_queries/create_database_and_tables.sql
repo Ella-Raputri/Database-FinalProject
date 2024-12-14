@@ -70,7 +70,7 @@ CREATE TABLE Disease (
 
 CREATE TABLE MedicalHistory (
     PatientId       VARCHAR(10)   		NOT NULL,
-    DiseaseId     	VARCHAR(200)		NOT NULL,   
+    DiseaseId     	VARCHAR(10)			NOT NULL,   
     `Status`		BIT					NOT NULL, 
     PRIMARY KEY (PatientId, DiseaseId),
     FOREIGN KEY (PatientId) REFERENCES Patient(PatientId) ON DELETE CASCADE ON UPDATE CASCADE,

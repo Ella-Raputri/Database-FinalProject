@@ -152,7 +152,7 @@ class PatientBooking(tk.Frame):
         self.sp_combobox['values'] = self.specialty_options
         self.sp_combobox.set('All')
         self.sp_combobox.place(x=678, y=172)
-        specialty_label = tk.Label(self, text="Select Branch:", font=("Poppins", 18), bg='white')
+        specialty_label = tk.Label(self, text="Select Specialty:", font=("Poppins", 18), bg='white')
         specialty_label.place(x=678, y=122)
 
         # Search button
@@ -437,7 +437,6 @@ class PatientBooking(tk.Frame):
                                   bg=self.master.bg_color1, fg="white", command=submit_booking)
         submit_button.pack(pady=20)
 
-
     def insert_booking_db(self, doctor_id, appointment_date, appointment_hour, checkup_type, reason):
         try:
             conn = connect_to_db()
@@ -467,7 +466,6 @@ class PatientBooking(tk.Frame):
         except Exception as e:
             print(f"Error inserting appointment: {e}")
             messagebox.showerror("Error", f"Failed to add booking: {e}")
-
 
     def on_mouse_wheel(self, event, canvas):
         if event.delta > 0:  

@@ -376,10 +376,10 @@ class AdminDashboard(tk.Frame):
             
             label = tk.Label(content1, text=f"Dr. {doctor_name}, {patient_name} ({appointment_time})", 
                              font=("Poppins", 11), wraplength=260, fg=self.master.font_color2, bg='white')
-            label.pack(fill='x', pady=(0, 10))
+            label.pack(fill='x', pady=(0, 10), padx=(10,0))
 
             separator = tk.Frame(content1, height=1, bg=self.master.separator_color)
-            separator.pack(fill='x', pady=(0, 10))
+            separator.pack(fill='x', pady=(0, 10), padx=(10,0))
 
         content1.update_idletasks()
         canvas1.config(scrollregion=canvas1.bbox("all"))
