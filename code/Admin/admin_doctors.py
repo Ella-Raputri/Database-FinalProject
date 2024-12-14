@@ -22,6 +22,8 @@ class AdminDoctorPage(tk.Frame):
 
         self.show_pass_img = tk.PhotoImage(file='images/show_pass.png')
         self.hide_pass_img = tk.PhotoImage(file='images/hide_pass.png')
+        self.default_pic = ImageTk.PhotoImage(Image.open("images/default_profile.png").resize((100, 100)))
+        self.delete_pic = ImageTk.PhotoImage(Image.open("images/delete_icon.png"))
 
         self.filter_field = 'd.DoctorId'
         self.sort_order = 'ASC'
@@ -410,14 +412,15 @@ class AdminDoctorPage(tk.Frame):
         profile_label = tk.Label(edit_window, text="Profile Picture", font=("Poppins Semibold", 16), fg=self.master.font_color1, bg='white')
         profile_label.place(x=715, y=365)
 
-        self.pict_label = tk.Label(edit_window, bg='white', width=100, height=100)
+        self.pict_label = tk.Label(edit_window, bg='white', image=self.default_pic, width=100, height=100)
         self.pict_label.place(x=890, y=365)
+        self.pict_label.image = self.default_pic
 
         upload_button = tk.Button(
             edit_window, text="Upload", font=("Poppins", 12), bg='grey', fg='white',
             bd=0, command=upload_profile_picture
         )
-        upload_button.place(x=715, y=403, width=130, height=43)
+        upload_button.place(x=718, y=403, width=110, height=35)
 
         if profile_picture_path:
             img = Image.open(profile_picture_path)
@@ -425,6 +428,20 @@ class AdminDoctorPage(tk.Frame):
             profile_pic_img = ImageTk.PhotoImage(img)
             self.pict_label.config(image=profile_pic_img)
             self.pict_label.image = profile_pic_img
+        
+        def delete_profile_picture(event=None):
+            if hasattr(self, "uploaded_file_path") and self.uploaded_file_path:
+                if os.path.exists(self.uploaded_file_path):
+                    os.remove(self.uploaded_file_path)
+                self.uploaded_file_path = None 
+                self.pict_label.config(image=self.default_pic)  
+                self.pict_label.image = self.default_pic
+                messagebox.showinfo("Info", "Profile picture reset to default.")
+
+        delete_button = tk.Label(edit_window,image=self.delete_pic, fg='white',bd=0, cursor='hand2')
+        delete_button.bind("<Button-1>", lambda event: delete_profile_picture(event))
+        delete_button.image = self.delete_pic
+        delete_button.place(x=846, y=415)
 
         # Address
         address_label = tk.Label(edit_window, text="Address Details", font=("Poppins Semibold", 16), fg=self.master.font_color1, bg='white')
@@ -686,14 +703,29 @@ class AdminDoctorPage(tk.Frame):
         profile_label = tk.Label(add_window, text="Profile Picture", font=("Poppins Semibold", 16), fg=self.master.font_color1, bg='white')
         profile_label.place(x=715, y=365)
 
-        self.pict_label = tk.Label(add_window, bg='white', width=100, height=100)
+        self.pict_label = tk.Label(add_window, bg='white', image=self.default_pic, width=100, height=100)
         self.pict_label.place(x=890, y=365)
+        self.pict_label.image = self.default_pic
 
         upload_button = tk.Button(
             add_window, text="Upload", font=("Poppins", 12), bg='grey', fg='white',
             bd=0, command=upload_profile_picture
         )
-        upload_button.place(x=715, y=403, width=130, height=43)
+        upload_button.place(x=718, y=403, width=110, height=35)
+
+        def delete_profile_picture(event=None):
+            if hasattr(self, "uploaded_file_path") and self.uploaded_file_path:
+                if os.path.exists(self.uploaded_file_path):
+                    os.remove(self.uploaded_file_path)
+                self.uploaded_file_path = None 
+                self.pict_label.config(image=self.default_pic)  
+                self.pict_label.image = self.default_pic
+                messagebox.showinfo("Info", "Profile picture reset to default.")
+
+        delete_button = tk.Label(add_window,image=self.delete_pic, fg='white',bd=0, cursor='hand2')
+        delete_button.bind("<Button-1>", lambda event: delete_profile_picture(event))
+        delete_button.image = self.delete_pic
+        delete_button.place(x=846, y=415)
 
         # Address
         address_label = tk.Label(add_window, text="Address Details", font=("Poppins Semibold", 16), fg=self.master.font_color1, bg='white')
@@ -916,7 +948,7 @@ class AdminDoctorPage(tk.Frame):
                     label = tk.Label(self.schedule_panel, text=f"• {text}", font=("Poppins", 11), bg="white", anchor="w")
                     label.place(x=6, y=49 + i * 25)
             else:
-                label = tk.Label(self.schedule_panel, text="No schedule available", font=("Poppins", 11), bg="white", anchor="w")
+                label = tk.Label(self.schedule_panel, text="No schedule", font=("Poppins", 11), bg="white", anchor="w")
                 label.place(x=6, y=49)
             
             self.scview_more_btn = tk.Button(self.schedule_panel, text='View Details', bg=self.master.bg_color1,
