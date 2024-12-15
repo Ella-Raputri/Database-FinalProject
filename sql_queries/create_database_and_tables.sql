@@ -22,6 +22,7 @@ CREATE TABLE `User`(
     City				VARCHAR(50)			NOT NULL,
     AddressDetail		TEXT		 		NOT NULL,
     IsDeleted           BIT                 DEFAULT 0,
+    CONSTRAINT unique_email UNIQUE (email),
     PRIMARY KEY (UserId)
 );
 
@@ -122,18 +123,3 @@ INNER JOIN
     `User` pu ON b.PatientId = pu.UserId
 WHERE 
     pu.IsDeleted = 0 AND du.IsDeleted = 0;
-
--- ALTER TABLE `User` ADD COLUMN IsDeleted BIT DEFAULT 0;
--- start transaction;
--- ALTER TABLE MedicalHistory 
--- DROP FOREIGN KEY medicalhistory_ibfk_1;
-
--- ALTER TABLE MedicalHistory 
--- ADD CONSTRAINT medicalhistory_ibfk_1 
--- FOREIGN KEY (PatientId) 
--- REFERENCES Patient(PatientId) 
--- ON UPDATE CASCADE 
--- ON DELETE CASCADE;
-
--- commit;
--- rollback;

@@ -967,7 +967,8 @@ class AdminDoctorPage(tk.Frame):
                         ScheduleId
                     FROM DoctorSchedule
                     WHERE DoctorId = %s
-                    ORDER BY FIELD(DayOfWeek, 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'),
+                    ORDER BY FIELD(DayOfWeek, 'Monday', 'Tuesday', 'Wednesday', 
+                    'Thursday', 'Friday', 'Saturday', 'Sunday'),
                     StartHour, EndHour;
                 """
                 cursor.execute(query, (doctor_id,))

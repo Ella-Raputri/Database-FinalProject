@@ -941,7 +941,7 @@ class AdminPatientPage(tk.Frame):
                 cursor.execute(query1, (updated_email, updated_password, updated_first_name, updated_last_name,
                                         updated_gender, updated_phone, updated_city, updated_address, self.patient_id))
 
-                # Update Doctor table
+                # Update Patient table
                 query2 = """
                     UPDATE Patient
                     SET DateOfBirth = %s, ProfilePicture = %s

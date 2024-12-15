@@ -241,7 +241,8 @@ class AdminDashboard(tk.Frame):
                         DATE_FORMAT(ds.EndHour, '%H:%i') AS EndTime
                     FROM DoctorSchedule ds
                     INNER JOIN BranchBookings b ON ds.DoctorId = b.DoctorId
-                    WHERE ds.DayOfWeek = %s AND b.BranchNo = %s;
+                    WHERE ds.DayOfWeek = %s AND b.BranchNo = %s
+                    ORDER BY StartTime, EndTime ASC;
                 """
                 cursor.execute(query4, (today.strftime('%A'), self.branch_no))  
                 result4 = cursor.fetchall()

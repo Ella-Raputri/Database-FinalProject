@@ -199,7 +199,7 @@ class DoctorHistory(tk.Frame):
 
         for col in columns:
             self.table.heading(col, text=col)
-            self.table.column(col, width=210, anchor=tk.CENTER)
+            self.table.column(col, width=230, anchor=tk.CENTER)
 
         for i, row in enumerate(self.table_data):
             display_row = row[2:]
@@ -317,18 +317,6 @@ class DoctorHistory(tk.Frame):
                                 fg=self.master.font_color2, bg='white', anchor="w")
             name_label.grid(row=0, column=0, padx=(5, 10), sticky="w")
 
-            # edit button
-            edit_button = tk.Button(row_frame, image=self.edit_photo, 
-                                   command=lambda disease=disease, status=status, 
-                                   child_window=child_window: self.edit_medhist(disease, status, child_window))
-            edit_button.grid(row=0, column=1, padx=(0, 5), sticky="e")
-
-            # delete button            
-            delete_button = tk.Button(row_frame, image=self.delete_photo, 
-                                    command=lambda disease=disease, child_window=child_window: 
-                                    self.delete_medhist(disease, child_window))
-            delete_button.grid(row=0, column=2, padx=(0, 5), sticky="e")
-
             # desc label
             desc_label = tk.Label(row_frame, text=status,
                                 font=("Poppins", 12), fg=self.master.font_color2, bg='white', 
@@ -339,12 +327,6 @@ class DoctorHistory(tk.Frame):
         content1.update_idletasks()
         canvas1.config(scrollregion=canvas1.bbox("all"))
         canvas1.bind("<MouseWheel>", lambda event, canvas=canvas1: self.on_mouse_wheel(event, canvas))
-
-        # add btn
-        self.add_photo = tk.PhotoImage(file='images/add_icon.png')
-        add_button = tk.Button(child_window, image=self.add_photo, 
-                                command=self.add_medhist)
-        add_button.place(x=475, y=100)
 
         # ok btn
         ok_button = tk.Button(child_window, text="OK", font=("Poppins Semibold", 18), bg=self.master.bg_color1, 
@@ -366,171 +348,6 @@ class DoctorHistory(tk.Frame):
             if conn:
                 conn.close()
     
-    def add_medhist(self):
-        add_window = tk.Toplevel(self)
-        add_window.title("Add New Medical History")
-        add_window.geometry("500x300")
-        add_window.configure(bg="white")
-
-        self.populate_disease()
-
-        tk.Label(add_window, text="Disease Name:", font=("Poppins", 14), bg="white").pack(pady=(20, 5))
-        disease_combobox = ttk.Combobox(add_window, values=self.all_diseases, font=("Poppins", 12), state="readonly", width=28)
-        disease_combobox.pack(pady=5)
-
-        tk.Label(add_window, text="Status:", font=("Poppins", 14), bg="white").pack(pady=(20, 5))
-        status_entry = ttk.Combobox(add_window, values=["Ongoing","Recovered"], 
-                                font=("Poppins", 12), state="readonly", width=28)
-        status_entry.pack(pady=5)
-
-        def save_medhist():
-            disease = disease_combobox.get().strip()
-            status_val = status_entry.get().strip()
-
-            if status_val == "Ongoing": status = 0
-            elif status_val == "Recovered": status = 1 
-            else: status = None
-
-            if not disease or status is None:
-                messagebox.showerror("Error", "All fields are required!")
-                return
-            
-            try:
-                conn = connect_to_db()
-                with conn.cursor() as cursor:
-                    check_query = """
-                        SELECT COUNT(*)
-                        FROM MedicalHistory
-                        WHERE PatientId = %s AND DiseaseId = (
-                            SELECT DiseaseId FROM Disease WHERE DiseaseName = %s
-                        )
-                    """
-                    cursor.execute(check_query, (self.patient_id, disease))
-                    exists = cursor.fetchone()[0]
-
-                    if exists:
-                        messagebox.showerror("Error", "This medical history already exists!")
-                        return
-
-                    query = """
-                        INSERT INTO MedicalHistory (PatientId, DiseaseId, Status)
-                        VALUES (%s, (SELECT DiseaseId FROM Disease WHERE DiseaseName = %s), %s)
-                    """
-                    cursor.execute(query, (self.patient_id, disease, status))
-                    conn.commit()
-                    messagebox.showinfo("Success", "New medical history added successfully!")
-            except Exception as e:
-                messagebox.showerror("Error", f"Failed to add medical history: {e}")
-            finally:
-                if conn:
-                    conn.close()
-                add_window.destroy()
-                self.history = self.get_medhistory()
-                self.open_medical()  
-                self.update_medical_panel() 
-
-        save_button = tk.Button(add_window, text="Save", font=("Poppins", 14), bg=self.master.bg_color1, fg="white", command=save_medhist)
-        save_button.pack(pady=(20, 10), ipadx=10, ipady=2)
-
-    def edit_medhist(self, curr_disease, curr_status, mhwindow):
-        edit_window = tk.Toplevel(self)
-        edit_window.title("Edit Schedule")
-        edit_window.geometry("500x300")
-        edit_window.configure(bg="white")
-
-        self.populate_disease()
-        tk.Label(edit_window, text="Disease Name:", font=("Poppins", 14), bg="white").pack(pady=(20, 5))
-        disease_combobox = ttk.Combobox(edit_window, values=self.all_diseases, font=("Poppins", 12), state="readonly", width=28)
-        disease_combobox.pack(pady=5)
-        disease_combobox.set(curr_disease)
-
-        tk.Label(edit_window, text="Status:", font=("Poppins", 14), bg="white").pack(pady=(20, 5))
-        status_entry = ttk.Combobox(edit_window, values=["Ongoing", "Recovered"], 
-                                font=("Poppins", 12), state="readonly", width=28)
-        status_entry.pack(pady=5)
-        status_entry.set(curr_status)
-        
-        def save_changes():
-            new_disease = disease_combobox.get().strip()
-            new_status_val = status_entry.get().strip()
-
-            if new_status_val == "Ongoing": new_status = 0
-            elif new_status_val == "Recovered": new_status = 1 
-            else: new_status = None
-
-            if not new_disease or new_status is None:
-                messagebox.showerror("Error", "All fields are required!")
-                edit_window.destroy()
-                return
-
-            try:
-                conn = connect_to_db()
-                with conn.cursor() as cursor:
-                    if new_disease != curr_disease:
-                        check_query = """
-                            SELECT COUNT(*)
-                            FROM MedicalHistory
-                            WHERE PatientId = %s AND DiseaseId = (
-                                SELECT DiseaseId FROM Disease WHERE DiseaseName = %s
-                            )
-                        """
-                        cursor.execute(check_query, (self.patient_id, new_disease))
-                        exists = cursor.fetchone()[0]
-
-                        if exists:
-                            messagebox.showerror("Error", "This disease name already exists for the patient!")
-                            return
-
-                    # Update the record
-                    update_query = """
-                        UPDATE MedicalHistory
-                        SET DiseaseId = (SELECT DiseaseId FROM Disease WHERE DiseaseName = %s), Status = %s
-                        WHERE PatientId = %s AND DiseaseId = (SELECT DiseaseId FROM Disease WHERE DiseaseName = %s)
-                    """
-                    cursor.execute(update_query, (new_disease, new_status, self.patient_id, curr_disease))
-                    conn.commit()
-                    messagebox.showinfo("Success", "Medical history updated successfully!")
-            except Exception as e:
-                messagebox.showerror("Error", f"Failed to update schedule: {e}")
-            finally:
-                if conn:
-                    conn.close()
-                    
-                edit_window.destroy()
-                mhwindow.destroy()  
-                self.history = self.get_medhistory()
-                self.open_medical()  
-                self.update_medical_panel() 
-
-        save_button = tk.Button(edit_window, text="Save", font=("Poppins", 14), bg=self.master.bg_color1, fg="white", command=save_changes)
-        save_button.pack(pady=(20, 10), ipadx=10, ipady=2)
-
-    def delete_medhist(self, disease, mhwindow):
-        try:
-            conn = connect_to_db()
-            with conn.cursor() as cursor:
-                confirm = messagebox.askyesno(
-                    "Confirm Delete",
-                    "Are you sure you want to delete this medical history?"
-                )
-                if confirm:
-                    query = "DELETE FROM MedicalHistory WHERE PatientId = %s \
-                    AND DiseaseId = (SELECT DiseaseId FROM Disease WHERE DiseaseName = %s)"
-
-                    cursor.execute(query, (self.patient_id, disease))
-                    conn.commit()
-                    messagebox.showinfo("Success", "Medical history deleted successfully!")
-                    
-        except Exception as e:
-            messagebox.showerror("Error", f"An error occurred while deleting: {e}")
-        finally:
-            if conn:
-                conn.close()
-            mhwindow.destroy()  
-            self.history = self.get_medhistory()
-            self.open_medical() 
-            self.update_medical_panel()
-
     def on_mouse_wheel(self, event, canvas):
         if event.delta > 0:  
             canvas.yview_scroll(-1, "units")

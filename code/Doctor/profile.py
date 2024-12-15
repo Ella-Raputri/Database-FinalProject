@@ -612,7 +612,7 @@ class DoctorProfile(tk.Frame):
             else:
                 messagebox.showerror("Error", "Please select a specialty.")
 
-        ok_button = tk.Button(specialty_window, text="OK", font=("Poppins", 12), command=on_ok_button_click, bg=self.master.bg_color1)
+        ok_button = tk.Button(specialty_window, text="OK", font=("Poppins", 12), command=on_ok_button_click, bg=self.master.bg_color1, fg='white')
         ok_button.pack(pady=20, padx=20)
 
     def open_edit_description_window(self):

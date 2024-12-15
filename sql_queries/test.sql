@@ -58,8 +58,8 @@ USE ClinicSystemDB;
 
 USE ClinicSystemDB;
 
-select * from user where userid like '%pat%';
-select * from patient ;
+select * from patient order by patientid desc;
+select * from doctor order by doctorid desc ;
 SELECT ProfilePicture, DATE_FORMAT(DateOfBirth, '%Y-%m-%d') AS formatted_dob FROM Patient WHERE PatientId = 'PAT0000001';
 select patientid from medicalhistory group by patientid order by counts desc limit 1;
 
@@ -154,5 +154,78 @@ WHERE d.DoctorId = 'DOC0000004';
 -- DROP TEMPORARY TABLE TempEmails;
 
 
+SELECT UserId, RoleName FROM User 
+WHERE Email = 'user1@example.com' AND Password = 'password' AND IsDeleted = 0;
+SELECT PatientID FROM Patient ORDER BY PatientID DESC LIMIT 1;
+
+SELECT Email, FirstName, LastName FROM User WHERE UserId = 'ADM0000001';
+SELECT COUNT(DoctorId) FROM Doctor WHERE BranchNo = 1;
 
 
+SELECT DISTINCT
+	SUBSTRING_INDEX(b.DoctorName, ' ', 1) AS DoctorFirstName, 
+	DATE_FORMAT(ds.StartHour, '%H:%i') AS StartTime, 
+	DATE_FORMAT(ds.EndHour, '%H:%i') AS EndTime
+FROM DoctorSchedule ds
+INNER JOIN BranchBookings b ON ds.DoctorId = b.DoctorId
+WHERE ds.DayOfWeek = 'Tuesday' AND b.BranchNo = 1
+ORDER BY StartTime, EndTime ASC;
+
+SELECT 
+	CONCAT(LEFT(DayOfWeek, 3), ': ', 
+	TIME_FORMAT(StartHour, '%H:%i'), '-', 
+	TIME_FORMAT(EndHour, '%H:%i')) AS Schedule,
+	ScheduleId
+FROM DoctorSchedule
+WHERE DoctorId = 'DOC0000004'
+ORDER BY FIELD(DayOfWeek, 'Monday', 'Tuesday', 'Wednesday', 
+'Thursday', 'Friday', 'Saturday', 'Sunday'),
+StartHour, EndHour;
+
+SELECT DiseaseId, DiseaseName FROM Disease;
+SELECT COUNT(PatientId) FROM MedicalHistory WHERE DiseaseId = 'DIS0000001';
+SELECT 
+	p.PatientId,
+	p.DateOfBirth,
+	u.Email,
+	CONCAT(u.FirstName, ' ', u.LastName) AS Name,
+	CASE u.Gender 
+		WHEN 0 THEN 'Male'
+		ELSE 'Female'
+	END AS Gender,
+	u.PhoneNumber,
+	u.City,
+	u.AddressDetail AS Address,
+	COUNT(b.BookingId) AS TotalBookings
+FROM 
+	Patient p
+LEFT JOIN 
+	`User` u ON p.PatientId = u.UserId
+LEFT JOIN 
+	Booking b ON p.PatientId = b.PatientId
+WHERE 
+	u.IsDeleted = 0 
+GROUP BY 
+	p.PatientId, u.Email, u.FirstName, u.LastName,
+	u.Gender, u.PhoneNumber, u.City, u.AddressDetail
+ORDER BY 
+	p.PatientId ASC;
+    
+
+SELECT 
+CONCAT(d.DiseaseName, ': ', 
+		CASE m.Status 
+			WHEN 0 THEN 'Ongoing'
+			ELSE 'Recovered'
+		END
+	) AS MedHistory
+FROM MedicalHistory m JOIN Disease d 
+ON m.DiseaseId = d.DiseaseId
+WHERE m.PatientId = 'PAT0000004'
+ORDER BY m.Status ASC;
+
+select * from doctorschedule where doctorid = 'DOC0000004';
+
+SELECT COUNT(BookingId) FROM Booking 
+WHERE DoctorId = 'DOC0000004' AND AppointmentDate = '2024-12-17' 
+AND AppointmentHour BETWEEN '12:00' AND '14:00';

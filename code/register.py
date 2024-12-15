@@ -237,7 +237,7 @@ class RegisterPage(tk.Frame):
         conn = connect_to_db()
         cursor = conn.cursor()
 
-        try:
+        try:            
             cursor.execute("SELECT PatientID FROM Patient ORDER BY PatientID DESC LIMIT 1")
             last_patient_id = cursor.fetchone()
 
@@ -250,6 +250,14 @@ class RegisterPage(tk.Frame):
             
             new_patient_id = f"PAT{str(new_numeric_part).zfill(7)}"  
             print(f"New: {new_patient_id}")
+            
+            check_email_query = "SELECT COUNT(*) FROM `User` WHERE Email = %s AND UserId != %s"
+            cursor.execute(check_email_query, (email, new_patient_id))
+            email_exists = cursor.fetchone()[0] > 0
+
+            if email_exists:
+                messagebox.showerror("Error", "The email is already in use by another user.")
+                return
 
             # insert to user
             query = """INSERT INTO User (UserId, Email, Password, FirstName, LastName, Gender,
@@ -260,9 +268,9 @@ class RegisterPage(tk.Frame):
             conn.commit()
 
             # insert to patient
-            patient_query = """INSERT INTO Patient (PatientID, DateOfBirth, ProfilePicture, IsDeleted)
-                            VALUES (%s, %s, %s, %s)"""
-            cursor.execute(patient_query, (new_patient_id, dob_date, None, 0))
+            patient_query = """INSERT INTO Patient (PatientID, DateOfBirth, ProfilePicture)
+                            VALUES (%s, %s, %s)"""
+            cursor.execute(patient_query, (new_patient_id, dob_date, None))
             conn.commit()
             messagebox.showinfo("Success", "Registration successful!")
             self.master.show_frame(self.master.login_page)

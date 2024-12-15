@@ -242,7 +242,9 @@ class AdminBookingPage(tk.Frame):
             conn = connect_to_db() 
             cursor = conn.cursor()
             query = """
-                SELECT d.DoctorId AS Id,  CONCAT(u.FirstName, ' ', u.LastName, ' (', d.DoctorId, ')') AS Name 
+                SELECT 
+                    d.DoctorId AS Id,  
+                    CONCAT(u.FirstName, ' ', u.LastName, ' (', d.DoctorId, ')') AS Name 
                 FROM Doctor d
                 INNER JOIN User u ON u.UserId = d.DoctorId
                 WHERE d.BranchNo = %s AND u.IsDeleted = 0
