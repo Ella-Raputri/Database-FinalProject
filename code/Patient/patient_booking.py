@@ -359,7 +359,7 @@ class PatientBooking(tk.Frame):
             appointment_date = appointment_date_entry.get().strip()
             appointment_hour = appointment_hour_entry.get().strip()
             checkup_type = checkup_entry.get().strip()
-            reason = reason_textarea.get().strip()
+            reason = reason_textarea.get("1.0", "end").strip()
 
             if schedule == 'Select Time' or not appointment_date \
             or not appointment_hour or not checkup_type or not reason:
