@@ -229,3 +229,60 @@ select * from doctorschedule where doctorid = 'DOC0000004';
 SELECT COUNT(BookingId) FROM Booking 
 WHERE DoctorId = 'DOC0000004' AND AppointmentDate = '2024-12-17' 
 AND AppointmentHour BETWEEN '12:00' AND '14:00';
+
+select * from booking where appointmentdate = curdate()+1;
+SELECT
+	d.ProfilePicture, d.Description, d.SpecialtyId, s.SpecialtyName
+FROM Doctor d JOIN Specialty s ON d.SpecialtyId = s.SpecialtyId
+WHERE d.DoctorId = 'DOC0000004';
+
+SELECT ProfilePicture, DATE_FORMAT(DateOfBirth, '%Y-%m-%d') AS formatted_dob FROM Patient WHERE PatientId = 'PAT0000004';
+SELECT 
+	DATE_FORMAT(AppointmentDate, '%Y-%m-%d') AS Date, 
+	DATE_FORMAT(AppointmentHour, '%H:%i') AS Hour
+from BranchBookings 
+WHERE AppointmentDate >= CURDATE() and PatientId = 'PAT0000004'
+ORDER BY AppointmentDate, AppointmentHour ASC LIMIT 1;
+
+SELECT COUNT(*) FROM `User` WHERE Email = 'pat4@example.com' ;
+SELECT BranchNo, BranchName FROM ClinicBranch;
+SELECT d.DoctorId, d.ProfilePicture, d.Description, s.SpecialtyName, s.SpecialtyDescription,
+u.FirstName, u.LastName, cb.BranchName
+FROM Doctor d
+JOIN Specialty s ON d.SpecialtyId = s.SpecialtyId
+JOIN `User` u ON d.DoctorId = u.UserId
+JOIN ClinicBranch cb ON d.BranchNo = cb.BranchNo
+WHERE u.IsDeleted = 0 AND cb.BranchName = 'Branch 5' AND s.SpecialtyName = 'Specialty 1';
+
+
+SELECT  
+	bb.DoctorId,
+	DATE_FORMAT(bb.AppointmentDate, '%Y-%m-%d') AS AppointmentDate, 
+	DATE_FORMAT(bb.AppointmentHour, '%H:%i') AS AppointmentHour,
+	bb.DoctorName,
+	CASE u.Gender 
+		WHEN 0 THEN 'Male'
+		ELSE 'Female'
+	END AS Gender,
+	s.SpecialtyName, 
+	br.BranchName,
+	bb.AppointmentStatus, 
+	bb.CheckUpType, 
+	bb.ReasonOfVisit
+FROM BranchBookings bb
+JOIN `User` u ON bb.DoctorId = u.UserId
+LEFT JOIN Doctor d ON bb.DoctorId = d.DoctorId
+LEFT JOIN Specialty s ON d.SpecialtyId = s.SpecialtyId
+LEFT JOIN ClinicBranch br ON d.BranchNo = br.BranchNo
+WHERE bb.PatientId = 'PAT0000004'
+ORDER BY
+BranchName ASC;
+
+select * from user where rolename = 'patient';
+select * from booking 
+where appointmentstatus = 'Pending' and doctorid = 'DOC0000004';
+
+select doctorid, count(bookingId) as totalCount from booking 
+where appointmentstatus = 'Pending'
+group by doctorid
+order by totalCount desc;

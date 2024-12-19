@@ -216,6 +216,29 @@ class AdminDoctorPage(tk.Frame):
 
         self.create_table()
 
+    def update_specialty_panel(self):
+        for widget in self.specialty_panel.winfo_children():
+            widget.destroy()
+
+        self.specialty_label = tk.Label(self.specialty_panel, text="Specialty", font=("Poppins Semibold", 16), 
+                                fg=self.master.font_color2, bg='white')
+        self.specialty_label.place(x=10, y=11)
+
+        splist = self.get_specialty_list()
+
+        if len(splist) >= 4:
+            for i in range(3):  
+                label = tk.Label(self.specialty_panel, text=f"• {splist[i][0]}", font=("Poppins", 12), bg="white", anchor="w")
+                label.place(x=10, y=49 + i * 25)  
+        else:
+            for i in range(len(splist)): 
+                label = tk.Label(self.specialty_panel, text=f"• {splist[i][0]}", font=("Poppins", 12), bg="white", anchor="w")
+                label.place(x=10, y=49 + i * 25)  
+
+        spview_more_btn = tk.Button(self.specialty_panel, text='View Details', bg=self.master.bg_color1,
+                                     fg='white', font=('Poppins', 12), bd=0, command=self.open_specialties)
+        spview_more_btn.place(x=30, y=161, width=110, height=32)
+
     def populate_specialty_combobox(self):
         try:
             conn = connect_to_db() 
@@ -1124,6 +1147,7 @@ class AdminDoctorPage(tk.Frame):
                     conn.close()
                 add_window.destroy() 
                 self.open_specialties()  
+                self.update_specialty_panel()
 
         save_button = tk.Button(add_window, text="Save", font=("Poppins", 14), bg=self.master.bg_color1, fg="white", command=save_specialty)
         save_button.pack(pady=(20, 10), ipadx=10, ipady=2)
@@ -1191,6 +1215,7 @@ class AdminDoctorPage(tk.Frame):
                 edit_window.destroy()
                 spwindow.destroy()  # Ensure old child_window is properly closed
                 self.open_specialties() 
+                self.update_specialty_panel()
 
         save_button = tk.Button(edit_window, text="Save", font=("Poppins", 14), bg=self.master.bg_color1, fg="white", command=save_changes)
         save_button.pack(pady=(20, 10), ipadx=10, ipady=2)
@@ -1230,6 +1255,7 @@ class AdminDoctorPage(tk.Frame):
         finally:
             if conn:
                 conn.close()
+            self.update_specialty_panel()
 
     def is_valid_time(self, time_str):
         try:

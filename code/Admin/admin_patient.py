@@ -213,6 +213,29 @@ class AdminPatientPage(tk.Frame):
 
         self.create_table()
     
+    def update_disease_panel(self):
+        for widget in self.disease_panel.winfo_children():
+            widget.destroy()
+
+        self.disease_label = tk.Label(self.disease_panel, text="Diseases", font=("Poppins Semibold", 16), 
+                                fg=self.master.font_color2, bg='white')
+        self.disease_label.place(x=10, y=11)
+
+        self.populate_disease()
+
+        if len(self.all_diseases) >= 4:
+            for i in range(3):  
+                label = tk.Label(self.disease_panel, text=f"• {self.all_diseases[i]}", font=("Poppins", 12), bg="white", anchor="w")
+                label.place(x=10, y=49 + i * 25)  
+        else:
+            for i in range(len(self.all_diseases)): 
+                label = tk.Label(self.disease_panel, text=f"• {self.all_diseases[i]}", font=("Poppins", 12), bg="white", anchor="w")
+                label.place(x=10, y=49 + i * 25)  
+        
+        dis_view_more_btn = tk.Button(self.disease_panel, text='View Details', bg=self.master.bg_color1,
+                                     fg='white', font=('Poppins', 12), bd=0, command=self.open_disease)
+        dis_view_more_btn.place(x=30, y=146, width=110, height=32)
+
     def get_diseases_data(self):
         try:
             conn = connect_to_db()
@@ -349,6 +372,7 @@ class AdminPatientPage(tk.Frame):
                     conn.close()
                 add_window.destroy() 
                 self.open_disease() 
+                self.update_disease_panel()
 
         save_button = tk.Button(add_window, text="Save", font=("Poppins", 14), bg=self.master.bg_color1, fg="white", command=save_disease)
         save_button.pack(pady=(20, 10), ipadx=10, ipady=2)
@@ -397,6 +421,7 @@ class AdminPatientPage(tk.Frame):
                 edit_window.destroy()
                 disease_window.destroy()  
                 self.open_disease() 
+                self.update_disease_panel()
 
         save_button = tk.Button(edit_window, text="Save", font=("Poppins", 14), bg=self.master.bg_color1, fg="white", command=save_changes)
         save_button.pack(pady=(20, 10), ipadx=10, ipady=2)
@@ -436,6 +461,7 @@ class AdminPatientPage(tk.Frame):
         finally:
             if conn:
                 conn.close()
+            self.update_disease_panel()
     
     def add_patient(self):  
         def show_hide_password():
